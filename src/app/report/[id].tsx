@@ -26,8 +26,10 @@ export default function ReportScreen() {
     setSending(true);
     setError(null);
     try {
+      // Testers may report from anywhere, so their location is optional
+      const { data: tester } = await supabase.rpc('is_tester');
       const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
+      if (status !== 'granted' && !tester) {
         setError(
           Platform.OS === 'web'
             ? 'Bez lokacije ne možemo da proverimo da si u objektu. Dozvoli lokaciju: ikonica levo od adrese stranice → Dozvole → Lokacija → Dozvoli, pa probaj ponovo. Proveri i da je lokacija uključena na telefonu.'
@@ -35,7 +37,10 @@ export default function ReportScreen() {
         );
         return;
       }
-      const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
+      const coords =
+        status === 'granted'
+          ? (await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High })).coords
+          : { latitude: 0, longitude: 0 };
 
       let videoPath: string | null = null;
       if (video) {
@@ -52,8 +57,8 @@ export default function ReportScreen() {
 
       const { error: rpcError } = await supabase.rpc('submit_vibe_report', {
         p_venue_id: id,
-        p_lat: pos.coords.latitude,
-        p_lng: pos.coords.longitude,
+        p_lat: coords.latitude,
+        p_lng: coords.longitude,
         p_vibe: vibe,
         p_crowd: crowd,
         p_music_genre: genre.trim() || null,
