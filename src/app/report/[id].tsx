@@ -1,7 +1,7 @@
 import * as Location from 'expo-location';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { VideoRecorder, type RecordedVideo } from '@/components/video-recorder';
 import { Spacing, useColors } from '@/constants/theme';
@@ -16,7 +16,6 @@ export default function ReportScreen() {
   const [vibe, setVibe] = useState<number | null>(null);
   const [crowd, setCrowd] = useState<number | null>(null);
   const [genre, setGenre] = useState('');
-  const [comment, setComment] = useState('');
   const [video, setVideo] = useState<RecordedVideo | null>(null);
   const [recorderOpen, setRecorderOpen] = useState(false);
   const [sending, setSending] = useState(false);
@@ -29,7 +28,11 @@ export default function ReportScreen() {
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
-        setError('Bez lokacije ne možemo da proverimo da si u objektu.');
+        setError(
+          Platform.OS === 'web'
+            ? 'Bez lokacije ne možemo da proverimo da si u objektu. Dozvoli lokaciju: ikonica levo od adrese stranice → Dozvole → Lokacija → Dozvoli, pa probaj ponovo. Proveri i da je lokacija uključena na telefonu.'
+            : 'Bez lokacije ne možemo da proverimo da si u objektu.',
+        );
         return;
       }
       const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
@@ -54,7 +57,7 @@ export default function ReportScreen() {
         p_vibe: vibe,
         p_crowd: crowd,
         p_music_genre: genre.trim() || null,
-        p_comment: comment.trim() || null,
+        p_comment: null,
         p_video_path: videoPath,
         p_video_duration_s: video?.durationS ?? null,
       });
@@ -99,15 +102,6 @@ export default function ReportScreen() {
         value={genre}
         onChangeText={setGenre}
         style={[styles.input, text, { backgroundColor: colors.backgroundElement }]}
-      />
-      <TextInput
-        placeholder="Komentar (opciono)"
-        placeholderTextColor={colors.textSecondary}
-        value={comment}
-        onChangeText={setComment}
-        maxLength={280}
-        multiline
-        style={[styles.input, text, { backgroundColor: colors.backgroundElement, minHeight: 80 }]}
       />
 
       <Pressable style={[styles.option, { backgroundColor: colors.backgroundElement }]} onPress={() => (video ? setVideo(null) : setRecorderOpen(true))}>

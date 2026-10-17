@@ -13,7 +13,7 @@ import { CROWD_LABELS, VENUE_TYPE_LABELS, VIBE_EMOJI, errorMessage, timeAgo } fr
 // The reporter's GPS position (user_location) is not readable by clients, so
 // select('*') is refused; ask only for the columns the app is granted.
 const REPORT_COLUMNS =
-  'id, venue_id, user_id, vibe, crowd, music_genre, comment, video_path, video_duration_s, video_expires_at, archived, archive_withdrawn, created_at';
+  'id, venue_id, user_id, vibe, crowd, music_genre, video_path, video_duration_s, video_expires_at, archived, archive_withdrawn, created_at';
 
 export default function VenueScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -104,7 +104,6 @@ export default function VenueScreen() {
               {VIBE_EMOJI[r.vibe - 1]} {CROWD_LABELS[r.crowd]}{r.music_genre ? ` · ${r.music_genre}` : ''}
               <Text style={muted}>  {timeAgo(r.created_at)}</Text>
             </Text>
-            {r.comment && <Text style={text}>{r.comment}</Text>}
             {r.video_path && <VideoClip path={r.video_path} />}
             {isOwner && r.video_path && !r.archive_withdrawn && (
               <Pressable onPress={() => toggleArchive(r)}>
