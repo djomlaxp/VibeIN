@@ -1,0 +1,47 @@
+export type VenueType = 'club' | 'cafe' | 'restaurant' | 'concert_venue' | 'stadium';
+
+export type Venue = {
+  id: string;
+  name: string;
+  type: VenueType;
+  address: string | null;
+  city: string;
+  description: string | null;
+  owner_id: string | null;
+  verified: boolean;
+  lat: number;
+  lng: number;
+};
+
+export type VibeNow = {
+  venue_id: string;
+  vibe_score: number | null;
+  crowd: number | null;
+  report_count: number;
+  last_report_at: string | null;
+};
+
+export type VibeReport = {
+  id: string;
+  venue_id: string;
+  user_id: string;
+  vibe: number;
+  crowd: number;
+  music_genre: string | null;
+  comment: string | null;
+  video_path: string | null;
+  video_duration_s: number | null;
+  video_expires_at: string | null;
+  archived: boolean;
+  created_at: string;
+};
+
+export type Post = {
+  id: string;
+  venue_id: string;
+  type: 'promo' | 'event' | 'info';
+  title: string;
+  body: string | null;
+  valid_to: string | null;
+  created_at: string;
+};

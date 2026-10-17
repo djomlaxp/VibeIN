@@ -3,9 +3,7 @@
  * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://unistyl.es/), etc.
  */
 
-import '@/global.css';
-
-import { Platform } from 'react-native';
+import { Platform, useColorScheme } from 'react-native';
 
 export const Colors = {
   light: {
@@ -23,6 +21,10 @@ export const Colors = {
     textSecondary: '#B0B4BA',
   },
 } as const;
+
+export function useColors() {
+  return Colors[useColorScheme() === 'dark' ? 'dark' : 'light'];
+}
 
 export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
 
@@ -44,10 +46,10 @@ export const Fonts = Platform.select({
     mono: 'monospace',
   },
   web: {
-    sans: 'var(--font-display)',
-    serif: 'var(--font-serif)',
-    rounded: 'var(--font-rounded)',
-    mono: 'var(--font-mono)',
+    sans: 'system-ui, sans-serif',
+    serif: 'Georgia, serif',
+    rounded: 'system-ui, sans-serif',
+    mono: 'ui-monospace, monospace',
   },
 });
 
@@ -61,5 +63,4 @@ export const Spacing = {
   six: 64,
 } as const;
 
-export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;
 export const MaxContentWidth = 800;

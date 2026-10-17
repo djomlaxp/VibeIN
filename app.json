@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "vibein",
+    "name": "VibeIN",
     "slug": "vibein",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -20,7 +20,7 @@
       "predictiveBackGestureEnabled": false
     },
     "web": {
-      "output": "server",
+      "output": "single",
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
@@ -32,7 +32,22 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
-      ]
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "VibeIN koristi kameru da snimiš kratak video atmosfere.",
+          "microphonePermission": "VibeIN koristi mikrofon da snimak ima zvuk atmosfere.",
+          "recordAudioAndroid": true
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "VibeIN proverava da li si u objektu kada prijavljuješ atmosferu."
+        }
+      ],
+      "expo-video"
     ],
     "experiments": {
       "typedRoutes": true,

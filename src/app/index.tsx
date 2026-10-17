@@ -1,98 +1,115 @@
-import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import * as Location from 'expo-location';
+import { Link, Stack } from 'expo-router';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { VibeBadge } from '@/components/vibe-badge';
+import { Spacing, useColors } from '@/constants/theme';
+import { useAuth } from '@/lib/auth';
+import { supabase } from '@/lib/supabase';
+import type { Venue, VenueType, VibeNow } from '@/lib/types';
+import { CITY, VENUE_TYPE_LABELS, distanceMeters, timeAgo } from '@/lib/vibe';
 
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
-  }
-  if (Device.isDevice) {
-    return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
-      </ThemedText>
-    );
-  }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
+type Row = Venue & { now?: VibeNow; distance?: number };
+
+export default function VenueList() {
+  const colors = useColors();
+  const { session } = useAuth();
+  const [venues, setVenues] = useState<Venue[]>([]);
+  const [vibes, setVibes] = useState<Record<string, VibeNow>>({});
+  const [filter, setFilter] = useState<VenueType | null>(null);
+  const [position, setPosition] = useState<{ lat: number; lng: number } | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const load = useCallback(async () => {
+    setRefreshing(true);
+    const [{ data: v }, { data: n }] = await Promise.all([
+      supabase.from('venues_with_coords').select('*').eq('city', CITY),
+      supabase.from('venue_vibe_now').select('*'),
+    ]);
+    setVenues((v as Venue[]) ?? []);
+    setVibes(Object.fromEntries(((n as VibeNow[]) ?? []).map((x) => [x.venue_id, x])));
+    setRefreshing(false);
+  }, []);
+
+  useEffect(() => {
+    load();
+    // Live updates: refresh when anyone reports atmosphere
+    const channel = supabase
+      .channel('vibe-reports')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'vibe_reports' }, load)
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [load]);
+
+  useEffect(() => {
+    (async () => {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') return;
+      const p = await Location.getCurrentPositionAsync({});
+      setPosition({ lat: p.coords.latitude, lng: p.coords.longitude });
+    })();
+  }, []);
+
+  const rows = useMemo<Row[]>(() => {
+    return venues
+      .filter((v) => !filter || v.type === filter)
+      .map((v) => ({ ...v, now: vibes[v.id], distance: position ? distanceMeters(position, v) : undefined }))
+      .sort((a, b) => (b.now?.vibe_score ?? -1) - (a.now?.vibe_score ?? -1));
+  }, [venues, vibes, filter, position]);
+
   return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
-  );
-}
-
-export default function HomeScreen() {
-  return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
-          <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
-          </ThemedText>
-        </ThemedView>
-
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
-
-        <ThemedView type="backgroundElement" style={styles.stepContainer}>
-          <HintRow
-            title="Try editing"
-            hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
-          />
-          <HintRow title="Dev tools" hint={getDevMenuHint()} />
-          <HintRow
-            title="Fresh start"
-            hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-          />
-        </ThemedView>
-
-        {Platform.OS === 'web' && <WebBadge />}
-      </SafeAreaView>
-    </ThemedView>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <Stack.Screen
+        options={{
+          headerRight: () => (
+            <Link href={session ? '/' : '/login'} onPress={() => session && supabase.auth.signOut()}>
+              <Text style={{ color: colors.textSecondary }}>{session ? 'Odjavi se' : 'Prijavi se'}</Text>
+            </Link>
+          ),
+        }}
+      />
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filters} contentContainerStyle={{ gap: Spacing.two, paddingHorizontal: Spacing.three }}>
+        {[null, ...(Object.keys(VENUE_TYPE_LABELS) as VenueType[])].map((t) => (
+          <Pressable
+            key={t ?? 'all'}
+            onPress={() => setFilter(t)}
+            style={[styles.chip, { backgroundColor: filter === t ? colors.text : colors.backgroundElement }]}>
+            <Text style={{ color: filter === t ? colors.background : colors.text }}>{t ? VENUE_TYPE_LABELS[t] : 'Sve'}</Text>
+          </Pressable>
+        ))}
+      </ScrollView>
+      <FlatList
+        data={rows}
+        keyExtractor={(v) => v.id}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={load} />}
+        ListEmptyComponent={<Text style={[styles.empty, { color: colors.textSecondary }]}>Još nema objekata u gradu {CITY}.</Text>}
+        renderItem={({ item }) => (
+          <Link href={{ pathname: '/venue/[id]', params: { id: item.id } }} asChild>
+            <Pressable style={[styles.row, { borderColor: colors.backgroundElement }]}>
+              <VibeBadge score={item.now?.vibe_score ?? null} />
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.name, { color: colors.text }]}>{item.name}</Text>
+                <Text style={{ color: colors.textSecondary }}>
+                  {VENUE_TYPE_LABELS[item.type]}
+                  {item.distance != null ? ` · ${item.distance < 1000 ? `${Math.round(item.distance)} m` : `${(item.distance / 1000).toFixed(1)} km`}` : ''}
+                  {item.now?.last_report_at ? ` · ${timeAgo(item.now.last_report_at)}` : ' · nema svežih prijava'}
+                </Text>
+              </View>
+            </Pressable>
+          </Link>
+        )}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    flexDirection: 'row',
-  },
-  safeArea: {
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
-    maxWidth: MaxContentWidth,
-  },
-  heroSection: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
-  },
-  title: {
-    textAlign: 'center',
-  },
-  code: {
-    textTransform: 'uppercase',
-  },
-  stepContainer: {
-    gap: Spacing.three,
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
-  },
+  filters: { flexGrow: 0, paddingVertical: Spacing.two },
+  chip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three, padding: Spacing.three, borderBottomWidth: StyleSheet.hairlineWidth },
+  name: { fontSize: 17, fontWeight: '600' },
+  empty: { textAlign: 'center', marginTop: Spacing.six },
 });

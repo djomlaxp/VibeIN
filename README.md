@@ -1,56 +1,36 @@
-# Welcome to your Expo app 👋
+# VibeIN
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Aplikacija koja pokazuje atmosferu uživo u klubovima, kafićima, restoranima, na koncertima i stadionima. Korisnici prijavljuju atmosferu (ocena, gužva, muzika, kratak video), a vlasnici objekata objavljuju promocije, najave i informacije.
 
-## Get started
+Prvi grad: **Pančevo**. Jedan kod za iOS, Android i web (Expo + React Native), backend je Supabase.
 
-1. Install dependencies
+## Pravila koja čuva baza
 
-   ```bash
-   npm install
-   ```
+Sva pravila su u `supabase/migrations/` i važe bez obzira na aplikaciju:
 
-2. Start the app
+- prijava je moguća samo na **manje od 100 m** od objekta;
+- **jedna prijava po objektu na 15 minuta** po korisniku;
+- video do **60 sekundi**, snima se samo kamerom u aplikaciji (nema izbora iz galerije);
+- video se **briše posle 3 sata** (zakazani posao na svakih 15 min), osim ako ga vlasnik objekta **arhivira** na profilu;
+- vlasnik ne može da ocenjuje svoj objekat;
+- GPS pozicija korisnika se ne vidi drugima.
 
-   ```bash
-   npx expo start
-   ```
+## Pokretanje
 
-In the output, you'll find options to open the app in a
+1. Napravi projekat na [supabase.com](https://supabase.com) i u SQL editoru pokreni `supabase/migrations/20261017000000_init.sql`, pa `supabase/seed.sql` za probne objekte. (Ili sa Supabase CLI: `supabase link` pa `supabase db push`.)
+2. Kopiraj `.env.example` u `.env` i upiši URL i anon ključ projekta.
+3. `npm install`
+4. `npm run web` za web, ili `npx expo run:android` / `npx expo run:ios` za telefon. Kamera i video zahtevaju development build, ne rade u Expo Go.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Struktura
 
-You can start developing by editing the files inside the **src/app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+- `src/app/index.tsx` lista objekata sa vibe ocenom uživo i filterom po tipu
+- `src/app/venue/[id].tsx` stranica objekta: vibe, poslednje prijave sa snimcima, promocije, arhiva snimaka
+- `src/app/report/[id].tsx` prijava atmosfere sa snimanjem videa
+- `src/app/login.tsx` prijava i registracija emailom
+- `src/lib/` Supabase klijent, tipovi i zajednička pravila
+- `supabase/migrations/` šema baze, pravila pristupa i funkcije
 
-## Get a fresh project
+## Sledeće
 
-When you're ready, run:
-
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **example** directory and create a blank **src/app** directory where you can start developing.
-
-### Other setup steps
-
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Mapa, vlasnički deo (preuzimanje objekta, objave), Google i Apple prijava, moderacija, uvoz objekata za Pančevo.
