@@ -1,0 +1,13 @@
+# Checks that the Supabase database answers and has the tables the app reads.
+name: Provera baze
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: ./scripts/check-db.sh

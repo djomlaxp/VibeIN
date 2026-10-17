@@ -10,6 +10,11 @@ import { supabase } from '@/lib/supabase';
 import type { Post, Venue, VibeNow, VibeReport } from '@/lib/types';
 import { CROWD_LABELS, VENUE_TYPE_LABELS, VIBE_EMOJI, errorMessage, timeAgo } from '@/lib/vibe';
 
+// The reporter's GPS position (user_location) is not readable by clients, so
+// select('*') is refused; ask only for the columns the app is granted.
+const REPORT_COLUMNS =
+  'id, venue_id, user_id, vibe, crowd, music_genre, comment, video_path, video_duration_s, video_expires_at, archived, archive_withdrawn, created_at';
+
 export default function VenueScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const colors = useColors();
@@ -26,8 +31,8 @@ export default function VenueScreen() {
     const [v, n, r, a, p] = await Promise.all([
       supabase.from('venues_with_coords').select('*').eq('id', id).single(),
       supabase.from('venue_vibe_now').select('*').eq('venue_id', id).maybeSingle(),
-      supabase.from('vibe_reports').select('*').eq('venue_id', id).gte('created_at', since).order('created_at', { ascending: false }),
-      supabase.from('vibe_reports').select('*').eq('venue_id', id).eq('archived', true).order('archived_at', { ascending: false }),
+      supabase.from('vibe_reports').select(REPORT_COLUMNS).eq('venue_id', id).gte('created_at', since).order('created_at', { ascending: false }),
+      supabase.from('vibe_reports').select(REPORT_COLUMNS).eq('venue_id', id).eq('archived', true).order('archived_at', { ascending: false }),
       supabase.from('posts').select('*').eq('venue_id', id).lte('valid_from', nowIso).or(`valid_to.is.null,valid_to.gt.${nowIso}`).order('created_at', { ascending: false }),
     ]);
     setVenue(v.data as Venue);
