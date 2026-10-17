@@ -7,15 +7,16 @@ URL="${EXPO_PUBLIC_SUPABASE_URL:-https://solrsdvwszkwwmaiidyd.supabase.co}"
 KEY="${EXPO_PUBLIC_SUPABASE_ANON_KEY:-sb_publishable_aay2OBQCrw1xFYaaeJXsMA_6MGGOf1j}"
 failed=0
 
-for table in venues vibe_reports posts profiles favorites notifications; do
+for table in venues venues_with_coords venue_vibe_now posts profiles favorites notifications \
+  "vibe_reports?select=id,venue_id,user_id,vibe,crowd,music_genre,comment,video_path,video_duration_s,video_expires_at,archived,archive_withdrawn,created_at"; do
   code=$(curl -sS -o /tmp/body -D /tmp/headers -w '%{http_code}' \
     -H "apikey: $KEY" -H "Prefer: count=exact" -H "Range: 0-0" \
-    "$URL/rest/v1/$table?select=*")
+    "$URL/rest/v1/$table")
   count=$(grep -i '^content-range:' /tmp/headers | sed 's#.*/##' | tr -d '\r')
   if [[ "$code" == 2* ]]; then
-    echo "OK   $table (rows visible without login: ${count:-?})"
+    echo "OK   ${table%%\?*} (rows visible without login: ${count:-?})"
   else
-    echo "FAIL $table (HTTP $code): $(cat /tmp/body)"
+    echo "FAIL ${table%%\?*} (HTTP $code): $(cat /tmp/body)"
     failed=1
   fi
 done
