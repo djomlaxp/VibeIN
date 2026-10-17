@@ -101,7 +101,7 @@ export default function VenueScreen() {
             </Text>
             {r.comment && <Text style={text}>{r.comment}</Text>}
             {r.video_path && <VideoClip path={r.video_path} />}
-            {isOwner && r.video_path && (
+            {isOwner && r.video_path && !r.archive_withdrawn && (
               <Pressable onPress={() => toggleArchive(r)}>
                 <Text style={[styles.link, text]}>{r.archived ? 'Ukloni iz arhive' : 'Arhiviraj na profilu'}</Text>
               </Pressable>
