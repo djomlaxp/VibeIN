@@ -1,5 +1,5 @@
 import * as Location from 'expo-location';
-import { Link, Stack, useFocusEffect } from 'expo-router';
+import { Link, Stack, router, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 
@@ -106,19 +106,19 @@ export default function VenueList() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={load} />}
         ListEmptyComponent={<Text style={[styles.empty, { color: colors.textSecondary }]}>Još nema objekata u gradu {CITY}.</Text>}
         renderItem={({ item }) => (
-          <Link href={{ pathname: '/venue/[id]', params: { id: item.id } }} asChild>
-            <Pressable style={[styles.row, { borderColor: colors.backgroundElement }]}>
-              <VibeBadge score={item.now?.vibe_score ?? null} />
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.name, { color: colors.text }]}>{item.name}</Text>
-                <Text style={{ color: colors.textSecondary }}>
-                  {VENUE_TYPE_LABELS[item.type]}
-                  {item.distance != null ? ` · ${item.distance < 1000 ? `${Math.round(item.distance)} m` : `${(item.distance / 1000).toFixed(1)} km`}` : ''}
-                  {item.now?.last_report_at ? ` · ${timeAgo(item.now.last_report_at)}` : ' · nema svežih prijava'}
-                </Text>
-              </View>
-            </Pressable>
-          </Link>
+          <Pressable
+            onPress={() => router.push({ pathname: '/venue/[id]', params: { id: item.id } })}
+            style={[styles.row, { borderColor: colors.backgroundElement }]}>
+            <VibeBadge score={item.now?.vibe_score ?? null} />
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.name, { color: colors.text }]}>{item.name}</Text>
+              <Text style={{ color: colors.textSecondary }}>
+                {VENUE_TYPE_LABELS[item.type]}
+                {item.distance != null ? ` · ${item.distance < 1000 ? `${Math.round(item.distance)} m` : `${(item.distance / 1000).toFixed(1)} km`}` : ''}
+                {item.now?.last_report_at ? ` · ${timeAgo(item.now.last_report_at)}` : ' · nema svežih prijava'}
+              </Text>
+            </View>
+          </Pressable>
         )}
       />
     </View>
