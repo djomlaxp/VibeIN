@@ -8,7 +8,7 @@ KEY="${EXPO_PUBLIC_SUPABASE_ANON_KEY:-sb_publishable_aay2OBQCrw1xFYaaeJXsMA_6MGG
 failed=0
 
 for table in venues venues_with_coords venue_vibe_now posts profiles favorites notifications \
-  "vibe_reports?select=id,venue_id,user_id,vibe,crowd,music_genre,comment,video_path,video_duration_s,video_expires_at,archived,archive_withdrawn,created_at"; do
+  "vibe_reports?select=id,venue_id,user_id,vibe,crowd,music_genre,video_path,video_duration_s,video_expires_at,archived,archive_withdrawn,created_at"; do
   code=$(curl -sS -o /tmp/body -D /tmp/headers -w '%{http_code}' \
     -H "apikey: $KEY" -H "Prefer: count=exact" -H "Range: 0-0" \
     "$URL/rest/v1/$table")

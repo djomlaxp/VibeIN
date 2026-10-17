@@ -28,7 +28,6 @@ export type VibeReport = {
   vibe: number;
   crowd: number;
   music_genre: string | null;
-  comment: string | null;
   video_path: string | null;
   video_duration_s: number | null;
   video_expires_at: string | null;

@@ -1,7 +1,7 @@
 import * as Location from 'expo-location';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { VideoRecorder, type RecordedVideo } from '@/components/video-recorder';
 import { Spacing, useColors } from '@/constants/theme';
@@ -16,7 +16,6 @@ export default function ReportScreen() {
   const [vibe, setVibe] = useState<number | null>(null);
   const [crowd, setCrowd] = useState<number | null>(null);
   const [genre, setGenre] = useState('');
-  const [comment, setComment] = useState('');
   const [video, setVideo] = useState<RecordedVideo | null>(null);
   const [recorderOpen, setRecorderOpen] = useState(false);
   const [sending, setSending] = useState(false);
@@ -27,12 +26,21 @@ export default function ReportScreen() {
     setSending(true);
     setError(null);
     try {
+      // Testers may report from anywhere, so their location is optional
+      const { data: tester } = await supabase.rpc('is_tester');
       const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        setError('Bez lokacije ne možemo da proverimo da si u objektu.');
+      if (status !== 'granted' && !tester) {
+        setError(
+          Platform.OS === 'web'
+            ? 'Bez lokacije ne možemo da proverimo da si u objektu. Dozvoli lokaciju: ikonica levo od adrese stranice → Dozvole → Lokacija → Dozvoli, pa probaj ponovo. Proveri i da je lokacija uključena na telefonu.'
+            : 'Bez lokacije ne možemo da proverimo da si u objektu.',
+        );
         return;
       }
-      const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
+      const coords =
+        status === 'granted'
+          ? (await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High })).coords
+          : { latitude: 0, longitude: 0 };
 
       let videoPath: string | null = null;
       if (video) {
@@ -49,12 +57,12 @@ export default function ReportScreen() {
 
       const { error: rpcError } = await supabase.rpc('submit_vibe_report', {
         p_venue_id: id,
-        p_lat: pos.coords.latitude,
-        p_lng: pos.coords.longitude,
+        p_lat: coords.latitude,
+        p_lng: coords.longitude,
         p_vibe: vibe,
         p_crowd: crowd,
         p_music_genre: genre.trim() || null,
-        p_comment: comment.trim() || null,
+        p_comment: null,
         p_video_path: videoPath,
         p_video_duration_s: video?.durationS ?? null,
       });
@@ -99,15 +107,6 @@ export default function ReportScreen() {
         value={genre}
         onChangeText={setGenre}
         style={[styles.input, text, { backgroundColor: colors.backgroundElement }]}
-      />
-      <TextInput
-        placeholder="Komentar (opciono)"
-        placeholderTextColor={colors.textSecondary}
-        value={comment}
-        onChangeText={setComment}
-        maxLength={280}
-        multiline
-        style={[styles.input, text, { backgroundColor: colors.backgroundElement, minHeight: 80 }]}
       />
 
       <Pressable style={[styles.option, { backgroundColor: colors.backgroundElement }]} onPress={() => (video ? setVideo(null) : setRecorderOpen(true))}>
