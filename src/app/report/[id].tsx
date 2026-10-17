@@ -1,7 +1,7 @@
 import * as Location from 'expo-location';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { VideoRecorder, type RecordedVideo } from '@/components/video-recorder';
 import { Spacing, useColors } from '@/constants/theme';
@@ -21,9 +21,6 @@ export default function ReportScreen() {
   const [recorderOpen, setRecorderOpen] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // Video recording is only available in the mobile app
-  const canRecord = Platform.OS !== 'web';
 
   async function submit() {
     if (!session || vibe == null || crowd == null) return;
@@ -113,11 +110,9 @@ export default function ReportScreen() {
         style={[styles.input, text, { backgroundColor: colors.backgroundElement, minHeight: 80 }]}
       />
 
-      {canRecord && (
-        <Pressable style={[styles.option, { backgroundColor: colors.backgroundElement }]} onPress={() => (video ? setVideo(null) : setRecorderOpen(true))}>
-          <Text style={text}>{video ? `🎥 Snimak ${video.durationS}s (ukloni)` : '🎥 Snimi atmosferu (do 60 s)'}</Text>
-        </Pressable>
-      )}
+      <Pressable style={[styles.option, { backgroundColor: colors.backgroundElement }]} onPress={() => (video ? setVideo(null) : setRecorderOpen(true))}>
+        <Text style={text}>{video ? `🎥 Snimak ${video.durationS}s (ukloni)` : '🎥 Snimi atmosferu (do 60 s)'}</Text>
+      </Pressable>
 
       {error && <Text style={styles.error}>{error}</Text>}
 

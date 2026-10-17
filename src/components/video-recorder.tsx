@@ -52,6 +52,8 @@ export function VideoRecorder({ onDone, onCancel }: { onDone: (v: RecordedVideo)
       <View style={styles.controls}>
         <Text style={styles.timer}>{elapsed}s / {MAX_VIDEO_SECONDS}s</Text>
         <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={recording ? 'Zaustavi snimanje' : 'Počni snimanje'}
           disabled={!ready}
           onPress={() => (recording ? camera.current?.stopRecording() : start())}
           style={[styles.record, recording && styles.recording]}
