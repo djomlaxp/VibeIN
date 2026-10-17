@@ -1,7 +1,7 @@
 import * as Location from 'expo-location';
 import { Link, Stack, router, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { FlatList, Platform, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { VibeBadge } from '@/components/vibe-badge';
 import { Spacing, useColors } from '@/constants/theme';
@@ -126,7 +126,7 @@ export default function VenueList() {
 }
 
 const styles = StyleSheet.create({
-  headerRight: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three },
+  headerRight: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three, paddingRight: Platform.OS === 'web' ? Spacing.three : 0 },
   filters: { flexGrow: 0, paddingVertical: Spacing.two },
   chip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999 },
   row: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three, padding: Spacing.three, borderBottomWidth: StyleSheet.hairlineWidth },
