@@ -14,7 +14,7 @@ type Row = Venue & { now?: VibeNow; distance?: number };
 
 export default function VenueList() {
   const colors = useColors();
-  const { session } = useAuth();
+  const { session, recovering } = useAuth();
   const [venues, setVenues] = useState<Venue[]>([]);
   const [vibes, setVibes] = useState<Record<string, VibeNow>>({});
   const [filter, setFilter] = useState<VenueType | null>(null);
@@ -32,6 +32,11 @@ export default function VenueList() {
     setVibes(Object.fromEntries(((n as VibeNow[]) ?? []).map((x) => [x.venue_id, x])));
     setRefreshing(false);
   }, []);
+
+  // A password reset link lands here; send the person on to choose a new password.
+  useEffect(() => {
+    if (recovering) router.push('/new-password');
+  }, [recovering]);
 
   useEffect(() => {
     load();

@@ -8,6 +8,11 @@ import { Platform } from 'react-native';
 const url = process.env.EXPO_PUBLIC_SUPABASE_URL || 'https://solrsdvwszkwwmaiidyd.supabase.co';
 const anonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_aay2OBQCrw1xFYaaeJXsMA_6MGGOf1j';
 
+// Read before createClient consumes the tokens in the URL: on web the
+// PASSWORD_RECOVERY event fires before any screen can subscribe to it.
+export const openedFromRecoveryLink =
+  Platform.OS === 'web' && typeof window !== 'undefined' && window.location.hash.includes('type=recovery');
+
 export const supabase = createClient(url, anonKey, {
   auth: {
     storage: Platform.OS === 'web' ? undefined : AsyncStorage,
