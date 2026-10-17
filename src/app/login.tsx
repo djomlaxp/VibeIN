@@ -27,7 +27,7 @@ function authMessage(error: AuthError) {
   }
 }
 
-// On web, bring people back to the app after they confirm their email.
+// On web, bring people back to the app from the confirmation and reset emails.
 function redirectUrl() {
   return Platform.OS === 'web' ? new URL('.', window.location.href).href : undefined;
 }
@@ -40,16 +40,22 @@ export default function LoginScreen() {
   const [message, setMessage] = useState<string | null>(null);
 
   async function signIn() {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
     if (error) setMessage(authMessage(error));
     else router.back();
   }
 
   async function signUp() {
-    const { data, error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: redirectUrl() } });
+    const { data, error } = await supabase.auth.signUp({ email: email.trim(), password, options: { emailRedirectTo: redirectUrl() } });
     if (error) setMessage(authMessage(error));
     else if (data.session) router.back();
     else setMessage('Poslali smo ti email. Klikni link u njemu da potvrdiš nalog, pa se prijavi.');
+  }
+
+  async function resetPassword() {
+    if (!email) return setMessage('Upiši svoj email, pa ponovo klikni "Zaboravio sam lozinku".');
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: redirectUrl() });
+    setMessage(error ? authMessage(error) : 'Poslali smo ti email. Klikni link u njemu da postaviš novu lozinku.');
   }
 
   const input = [styles.input, { color: colors.text, backgroundColor: colors.backgroundElement }];
@@ -57,13 +63,16 @@ export default function LoginScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <TextInput style={input} placeholder="Email" placeholderTextColor={colors.textSecondary} autoCapitalize="none" keyboardType="email-address" value={email} onChangeText={setEmail} />
-      <TextInput style={input} placeholder="Lozinka" placeholderTextColor={colors.textSecondary} secureTextEntry value={password} onChangeText={setPassword} />
+      <TextInput style={input} placeholder="Lozinka" placeholderTextColor={colors.textSecondary} secureTextEntry autoCapitalize="none" value={password} onChangeText={setPassword} />
       {message && <Text style={{ color: colors.textSecondary }}>{message}</Text>}
       <Pressable style={[styles.button, { backgroundColor: colors.text }]} onPress={signIn}>
         <Text style={[styles.buttonText, { color: colors.background }]}>Prijavi se</Text>
       </Pressable>
       <Pressable style={styles.button} onPress={signUp}>
         <Text style={[styles.buttonText, { color: colors.text }]}>Napravi nalog</Text>
+      </Pressable>
+      <Pressable style={styles.link} onPress={resetPassword}>
+        <Text style={{ color: colors.textSecondary }}>Zaboravio sam lozinku</Text>
       </Pressable>
     </View>
   );
@@ -74,4 +83,5 @@ const styles = StyleSheet.create({
   input: { padding: Spacing.three, borderRadius: 12, fontSize: 16 },
   button: { padding: Spacing.three, borderRadius: 12, alignItems: 'center' },
   buttonText: { fontSize: 17, fontWeight: '600' },
+  link: { padding: Spacing.two, alignItems: 'center' },
 });

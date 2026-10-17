@@ -14,6 +14,7 @@ export default function RootLayout() {
           <Stack.Screen name="report/[id]" options={{ title: 'Prijavi atmosferu', presentation: 'modal' }} />
           <Stack.Screen name="notifications" options={{ title: 'Obaveštenja' }} />
           <Stack.Screen name="login" options={{ title: 'Prijava', presentation: 'modal' }} />
+          <Stack.Screen name="new-password" options={{ title: 'Nova lozinka' }} />
         </Stack>
       </ThemeProvider>
     </AuthProvider>
