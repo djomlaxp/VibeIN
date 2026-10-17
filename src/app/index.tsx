@@ -1,5 +1,5 @@
 import * as Location from 'expo-location';
-import { Link, Stack } from 'expo-router';
+import { Link, Stack, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 
@@ -20,6 +20,7 @@ export default function VenueList() {
   const [filter, setFilter] = useState<VenueType | null>(null);
   const [position, setPosition] = useState<{ lat: number; lng: number } | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [unread, setUnread] = useState(0);
 
   const load = useCallback(async () => {
     setRefreshing(true);
@@ -44,6 +45,17 @@ export default function VenueList() {
     };
   }, [load]);
 
+  useFocusEffect(
+    useCallback(() => {
+      if (!session) return setUnread(0);
+      supabase
+        .from('notifications')
+        .select('id', { count: 'exact', head: true })
+        .is('read_at', null)
+        .then(({ count }) => setUnread(count ?? 0));
+    }, [session]),
+  );
+
   useEffect(() => {
     (async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
@@ -65,9 +77,16 @@ export default function VenueList() {
       <Stack.Screen
         options={{
           headerRight: () => (
-            <Link href={session ? '/' : '/login'} onPress={() => session && supabase.auth.signOut()}>
-              <Text style={{ color: colors.textSecondary }}>{session ? 'Odjavi se' : 'Prijavi se'}</Text>
-            </Link>
+            <View style={styles.headerRight}>
+              {session && (
+                <Link href="/notifications">
+                  <Text style={{ color: colors.text }}>🔔{unread > 0 ? ` ${unread}` : ''}</Text>
+                </Link>
+              )}
+              <Link href={session ? '/' : '/login'} onPress={() => session && supabase.auth.signOut()}>
+                <Text style={{ color: colors.textSecondary }}>{session ? 'Odjavi se' : 'Prijavi se'}</Text>
+              </Link>
+            </View>
           ),
         }}
       />
@@ -107,6 +126,7 @@ export default function VenueList() {
 }
 
 const styles = StyleSheet.create({
+  headerRight: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three },
   filters: { flexGrow: 0, paddingVertical: Spacing.two },
   chip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999 },
   row: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three, padding: Spacing.three, borderBottomWidth: StyleSheet.hairlineWidth },

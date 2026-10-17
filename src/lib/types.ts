@@ -33,6 +33,7 @@ export type VibeReport = {
   video_duration_s: number | null;
   video_expires_at: string | null;
   archived: boolean;
+  archive_withdrawn: boolean;
   created_at: string;
 };
 
@@ -44,4 +45,15 @@ export type Post = {
   body: string | null;
   valid_to: string | null;
   created_at: string;
+};
+
+export type AppNotification = {
+  id: string;
+  type: 'video_archived';
+  report_id: string | null;
+  venue_id: string | null;
+  read_at: string | null;
+  created_at: string;
+  venue: { name: string } | null;
+  report: { video_path: string | null; archived: boolean; archive_withdrawn: boolean } | null;
 };

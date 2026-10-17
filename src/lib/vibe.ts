@@ -36,6 +36,8 @@ const ERROR_MESSAGES: Record<string, string> = {
   invalid_video_path: 'Snimak nije ispravan, pokušaj ponovo.',
   not_venue_owner: 'Samo vlasnik objekta može arhivirati snimke.',
   video_expired: 'Snimak je istekao i ne može se arhivirati.',
+  archive_withdrawn: 'Autor je povukao ovaj snimak, ne može se ponovo arhivirati.',
+  not_video_author: 'Samo autor može da povuče svoj snimak.',
 };
 
 export function errorMessage(error: { message?: string } | null | undefined) {
