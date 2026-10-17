@@ -2,12 +2,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient } from '@supabase/supabase-js';
 import { Platform } from 'react-native';
 
-const url = process.env.EXPO_PUBLIC_SUPABASE_URL;
-const anonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
-
-if (!url || !anonKey) {
-  throw new Error('Set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY in .env (see .env.example)');
-}
+// The VibeIN project. The publishable key is meant to ship inside the app;
+// access is controlled by row level security in supabase/migrations.
+// Override both in .env to point the app at another Supabase project.
+const url = process.env.EXPO_PUBLIC_SUPABASE_URL || 'https://solrsdvwszkwwmaiidyd.supabase.co';
+const anonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_aay2OBQCrw1xFYaaeJXsMA_6MGGOf1j';
 
 export const supabase = createClient(url, anonKey, {
   auth: {

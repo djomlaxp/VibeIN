@@ -19,7 +19,7 @@ Sva pravila su u `supabase/migrations/` i važe bez obzira na aplikaciju:
 ## Pokretanje
 
 1. Napravi projekat na [supabase.com](https://supabase.com) i u SQL editoru pokreni redom fajlove iz `supabase/migrations/`, pa `supabase/seed.sql` za probne objekte. (Ili sa Supabase CLI: `supabase link` pa `supabase db push`.)
-2. Kopiraj `.env.example` u `.env` i upiši URL i anon ključ projekta.
+2. Aplikacija je već povezana sa VibeIN Supabase projektom. Za neki drugi projekat kopiraj `.env.example` u `.env` i upiši njegov URL i publishable ključ.
 3. `npm install`
 4. `npm run web` za web, ili `npx expo run:android` / `npx expo run:ios` za telefon. Kamera i video zahtevaju development build, ne rade u Expo Go.
 
