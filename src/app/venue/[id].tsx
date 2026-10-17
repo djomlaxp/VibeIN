@@ -1,4 +1,4 @@
-import { Link, Stack, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { Stack, router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
@@ -76,11 +76,11 @@ export default function VenueScreen() {
       </View>
 
       {!isOwner && (
-        <Link href={session ? { pathname: '/report/[id]', params: { id: venue.id } } : '/login'} asChild>
-          <Pressable style={[styles.button, { backgroundColor: colors.text }]}>
-            <Text style={[styles.buttonText, { color: colors.background }]}>Prijavi atmosferu</Text>
-          </Pressable>
-        </Link>
+        <Pressable
+          onPress={() => router.push(session ? { pathname: '/report/[id]', params: { id: venue.id } } : '/login')}
+          style={[styles.button, { backgroundColor: colors.text }]}>
+          <Text style={[styles.buttonText, { color: colors.background }]}>Prijavi atmosferu</Text>
+        </Pressable>
       )}
 
       {venue.description && <Text style={[text, styles.paragraph]}>{venue.description}</Text>}
