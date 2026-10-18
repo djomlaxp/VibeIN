@@ -2,7 +2,7 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
-import { Spacing, useColors } from '@/constants/theme';
+import { Fonts, Spacing, useColors } from '@/constants/theme';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 
@@ -42,8 +42,8 @@ export default function NewPasswordScreen() {
         onChangeText={setPassword}
       />
       {message && <Text style={{ color: colors.textSecondary }}>{message}</Text>}
-      <Pressable style={[styles.button, { backgroundColor: colors.text }]} onPress={save}>
-        <Text style={[styles.buttonText, { color: colors.background }]}>Sačuvaj lozinku</Text>
+      <Pressable style={[styles.button, { backgroundColor: colors.accent }]} onPress={save}>
+        <Text style={[styles.buttonText, { color: colors.onAccent }]}>Sačuvaj lozinku</Text>
       </Pressable>
     </View>
   );
@@ -52,6 +52,6 @@ export default function NewPasswordScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, padding: Spacing.three, gap: Spacing.three },
   input: { padding: Spacing.three, borderRadius: 12, fontSize: 16 },
-  button: { padding: Spacing.three, borderRadius: 12, alignItems: 'center' },
-  buttonText: { fontSize: 17, fontWeight: '600' },
+  button: { padding: Spacing.three, borderRadius: 999, alignItems: 'center' },
+  buttonText: { fontSize: 17, fontFamily: Fonts.bodyBold },
 });

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FlatList, Platform, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { VibeBadge } from '@/components/vibe-badge';
-import { Spacing, useColors } from '@/constants/theme';
+import { Fonts, Spacing, useColors } from '@/constants/theme';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 import type { Venue, VenueType, VibeNow } from '@/lib/types';
@@ -95,29 +95,34 @@ export default function VenueList() {
           ),
         }}
       />
+      <View style={styles.live}>
+        <View style={[styles.liveDot, { backgroundColor: colors.accent }]} />
+        <Text style={[styles.liveText, { color: colors.textSecondary }]}>{CITY} · uživo</Text>
+      </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filters} contentContainerStyle={{ gap: Spacing.two, paddingHorizontal: Spacing.three }}>
         {[null, ...(Object.keys(VENUE_TYPE_LABELS) as VenueType[])].map((t) => (
           <Pressable
             key={t ?? 'all'}
             onPress={() => setFilter(t)}
             style={[styles.chip, { backgroundColor: filter === t ? colors.text : colors.backgroundElement }]}>
-            <Text style={{ color: filter === t ? colors.background : colors.text }}>{t ? VENUE_TYPE_LABELS[t] : 'Sve'}</Text>
+            <Text style={[styles.chipText, { color: filter === t ? colors.background : colors.text }]}>{t ? VENUE_TYPE_LABELS[t] : 'Sve'}</Text>
           </Pressable>
         ))}
       </ScrollView>
       <FlatList
         data={rows}
         keyExtractor={(v) => v.id}
+        contentContainerStyle={styles.list}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={load} />}
         ListEmptyComponent={<Text style={[styles.empty, { color: colors.textSecondary }]}>Još nema objekata u gradu {CITY}.</Text>}
         renderItem={({ item }) => (
           <Pressable
             onPress={() => router.push({ pathname: '/venue/[id]', params: { id: item.id } })}
-            style={[styles.row, { borderColor: colors.backgroundElement }]}>
+            style={[styles.row, { backgroundColor: colors.backgroundElement }]}>
             <VibeBadge score={item.now?.vibe_score ?? null} />
             <View style={{ flex: 1 }}>
               <Text style={[styles.name, { color: colors.text }]}>{item.name}</Text>
-              <Text style={{ color: colors.textSecondary }}>
+              <Text style={[styles.meta, { color: colors.textSecondary }]}>
                 {VENUE_TYPE_LABELS[item.type]}
                 {item.distance != null ? ` · ${item.distance < 1000 ? `${Math.round(item.distance)} m` : `${(item.distance / 1000).toFixed(1)} km`}` : ''}
                 {item.now?.last_report_at ? ` · ${timeAgo(item.now.last_report_at)}` : ' · nema svežih prijava'}
@@ -132,9 +137,15 @@ export default function VenueList() {
 
 const styles = StyleSheet.create({
   headerRight: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three, paddingRight: Platform.OS === 'web' ? Spacing.three : 0 },
-  filters: { flexGrow: 0, paddingVertical: Spacing.two },
+  live: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two, paddingHorizontal: Spacing.three, paddingTop: Spacing.one },
+  liveDot: { width: 8, height: 8, borderRadius: 4 },
+  liveText: { fontFamily: Fonts.body, fontSize: 13 },
+  filters: { flexGrow: 0, paddingVertical: Spacing.three },
   chip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three, padding: Spacing.three, borderBottomWidth: StyleSheet.hairlineWidth },
-  name: { fontSize: 17, fontWeight: '600' },
+  chipText: { fontFamily: Fonts.bodyBold },
+  list: { paddingHorizontal: Spacing.three, paddingBottom: Spacing.four, gap: Spacing.two, maxWidth: 800, width: '100%', alignSelf: 'center' },
+  row: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three, padding: 12, borderRadius: 18 },
+  name: { fontSize: 16, fontFamily: Fonts.bodyBold },
+  meta: { fontFamily: Fonts.body, fontSize: 13 },
   empty: { textAlign: 'center', marginTop: Spacing.six },
 });

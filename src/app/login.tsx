@@ -3,7 +3,7 @@ import { useState } from 'react';
 import type { AuthError } from '@supabase/supabase-js';
 import { Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
-import { Spacing, useColors } from '@/constants/theme';
+import { Fonts, Spacing, useColors } from '@/constants/theme';
 import { supabase } from '@/lib/supabase';
 
 // Plain-language reasons for the Supabase auth errors people actually hit.
@@ -65,8 +65,8 @@ export default function LoginScreen() {
       <TextInput style={input} placeholder="Email" placeholderTextColor={colors.textSecondary} autoCapitalize="none" keyboardType="email-address" value={email} onChangeText={setEmail} />
       <TextInput style={input} placeholder="Lozinka" placeholderTextColor={colors.textSecondary} secureTextEntry autoCapitalize="none" value={password} onChangeText={setPassword} />
       {message && <Text style={{ color: colors.textSecondary }}>{message}</Text>}
-      <Pressable style={[styles.button, { backgroundColor: colors.text }]} onPress={signIn}>
-        <Text style={[styles.buttonText, { color: colors.background }]}>Prijavi se</Text>
+      <Pressable style={[styles.button, { backgroundColor: colors.accent }]} onPress={signIn}>
+        <Text style={[styles.buttonText, { color: colors.onAccent }]}>Prijavi se</Text>
       </Pressable>
       <Pressable style={styles.button} onPress={signUp}>
         <Text style={[styles.buttonText, { color: colors.text }]}>Napravi nalog</Text>
@@ -81,7 +81,7 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, padding: Spacing.three, gap: Spacing.three },
   input: { padding: Spacing.three, borderRadius: 12, fontSize: 16 },
-  button: { padding: Spacing.three, borderRadius: 12, alignItems: 'center' },
-  buttonText: { fontSize: 17, fontWeight: '600' },
+  button: { padding: Spacing.three, borderRadius: 999, alignItems: 'center' },
+  buttonText: { fontSize: 17, fontFamily: Fonts.bodyBold },
   link: { padding: Spacing.two, alignItems: 'center' },
 });

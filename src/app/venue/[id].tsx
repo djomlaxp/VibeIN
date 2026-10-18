@@ -4,7 +4,7 @@ import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-nati
 
 import { VibeBadge } from '@/components/vibe-badge';
 import { VideoClip } from '@/components/video-clip';
-import { Spacing, useColors } from '@/constants/theme';
+import { Fonts, Spacing, useColors } from '@/constants/theme';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 import type { Post, Venue, VibeNow, VibeReport } from '@/lib/types';
@@ -63,11 +63,13 @@ export default function VenueScreen() {
 
   return (
     <ScrollView style={{ backgroundColor: colors.background }} contentContainerStyle={styles.content}>
-      <Stack.Screen options={{ title: venue.name }} />
+      <Stack.Screen options={{ title: '' }} />
 
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.backgroundElement }]}>
+        <Text style={[styles.live, { color: colors.accent }]}>● UŽIVO{now?.last_report_at ? ` · ${timeAgo(now.last_report_at).toUpperCase()}` : ''}</Text>
+        <Text style={[styles.title, text]}>{venue.name}</Text>
         <VibeBadge score={now?.vibe_score ?? null} crowd={now?.crowd} size="large" />
-        <View style={{ flex: 1 }}>
+        <View>
           <Text style={muted}>{VENUE_TYPE_LABELS[venue.type]}{venue.address ? ` · ${venue.address}` : ''}</Text>
           <Text style={muted}>
             {now?.report_count ? `${now.report_count} prijava u poslednjih 90 min` : 'Nema svežih prijava'}
@@ -78,8 +80,8 @@ export default function VenueScreen() {
       {!isOwner && (
         <Pressable
           onPress={() => router.push(session ? { pathname: '/report/[id]', params: { id: venue.id } } : '/login')}
-          style={[styles.button, { backgroundColor: colors.text }]}>
-          <Text style={[styles.buttonText, { color: colors.background }]}>Prijavi atmosferu</Text>
+          style={[styles.button, { backgroundColor: colors.accent }]}>
+          <Text style={[styles.buttonText, { color: colors.onAccent }]}>Prijavi atmosferu</Text>
         </Pressable>
       )}
 
@@ -89,7 +91,7 @@ export default function VenueScreen() {
         <Section title="Promocije i najave" color={colors.text}>
           {posts.map((p) => (
             <View key={p.id} style={[styles.card, { backgroundColor: colors.backgroundElement }]}>
-              <Text style={[text, styles.cardTitle]}>{p.title}</Text>
+              <Text style={[styles.cardTitle, { color: colors.accentWarm }]}>{p.title}</Text>
               {p.body && <Text style={muted}>{p.body}</Text>}
             </View>
           ))}
@@ -143,12 +145,14 @@ function Section({ title, color, children }: { title: string; color: string; chi
 
 const styles = StyleSheet.create({
   content: { padding: Spacing.three, gap: Spacing.four, maxWidth: 800, width: '100%', alignSelf: 'center' },
-  header: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three },
-  button: { padding: Spacing.three, borderRadius: 12, alignItems: 'center' },
-  buttonText: { fontSize: 17, fontWeight: '600' },
+  header: { gap: Spacing.three, padding: Spacing.three, borderRadius: 20 },
+  live: { fontFamily: Fonts.bodyBold, fontSize: 12, letterSpacing: 1 },
+  title: { fontFamily: Fonts.display, fontSize: 24 },
+  button: { padding: Spacing.three, borderRadius: 999, alignItems: 'center' },
+  buttonText: { fontSize: 17, fontFamily: Fonts.bodyBold },
   paragraph: { fontSize: 16, lineHeight: 22 },
-  sectionTitle: { fontSize: 20, fontWeight: '700' },
-  card: { padding: Spacing.three, borderRadius: 12, gap: Spacing.two },
-  cardTitle: { fontWeight: '600', fontSize: 16 },
+  sectionTitle: { fontSize: 18, fontFamily: Fonts.displayBold },
+  card: { padding: Spacing.three, borderRadius: 16, gap: Spacing.two },
+  cardTitle: { fontFamily: Fonts.bodyBold, fontSize: 16 },
   link: { textDecorationLine: 'underline' },
 });
