@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { ActivityIndicator, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { VideoRecorder, type RecordedVideo } from '@/components/video-recorder';
-import { Spacing, useColors } from '@/constants/theme';
+import { Colors, Fonts, Spacing, useColors } from '@/constants/theme';
 import { useAuth } from '@/lib/auth';
 import { VIDEO_BUCKET, supabase } from '@/lib/supabase';
 import { CROWD_LABELS, VIBE_EMOJI, errorMessage } from '@/lib/vibe';
@@ -78,8 +78,8 @@ export default function ReportScreen() {
   }
 
   const text = { color: colors.text };
-  const option = (selected: boolean) => [styles.option, { backgroundColor: selected ? colors.text : colors.backgroundElement }];
-  const optionText = (selected: boolean) => ({ color: selected ? colors.background : colors.text });
+  const option = (selected: boolean) => [styles.option, { backgroundColor: selected ? colors.accent : colors.backgroundElement }];
+  const optionText = (selected: boolean) => ({ color: selected ? colors.onAccent : colors.text });
 
   return (
     <ScrollView style={{ backgroundColor: colors.background }} contentContainerStyle={styles.content}>
@@ -118,8 +118,8 @@ export default function ReportScreen() {
       <Pressable
         disabled={vibe == null || crowd == null || sending}
         onPress={submit}
-        style={[styles.submit, { backgroundColor: colors.text, opacity: vibe == null || crowd == null ? 0.4 : 1 }]}>
-        {sending ? <ActivityIndicator color={colors.background} /> : <Text style={[styles.submitText, { color: colors.background }]}>Pošalji</Text>}
+        style={[styles.submit, { backgroundColor: colors.accent, opacity: vibe == null || crowd == null ? 0.4 : 1 }]}>
+        {sending ? <ActivityIndicator color={colors.onAccent} /> : <Text style={[styles.submitText, { color: colors.onAccent }]}>Pošalji</Text>}
       </Pressable>
 
       <Modal visible={recorderOpen} animationType="slide" onRequestClose={() => setRecorderOpen(false)}>
@@ -137,12 +137,12 @@ export default function ReportScreen() {
 
 const styles = StyleSheet.create({
   content: { padding: Spacing.three, gap: Spacing.three, maxWidth: 600, width: '100%', alignSelf: 'center' },
-  label: { fontSize: 18, fontWeight: '600' },
+  label: { fontSize: 16, fontFamily: Fonts.displayBold },
   options: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two },
   option: { paddingHorizontal: 16, paddingVertical: 12, borderRadius: 12, alignItems: 'center' },
   emoji: { fontSize: 26 },
   input: { padding: Spacing.three, borderRadius: 12, fontSize: 16 },
-  error: { color: '#E5484D', fontSize: 15 },
-  submit: { padding: Spacing.three, borderRadius: 12, alignItems: 'center' },
-  submitText: { fontSize: 17, fontWeight: '600' },
+  error: { color: Colors.danger, fontSize: 15 },
+  submit: { padding: Spacing.three, borderRadius: 999, alignItems: 'center' },
+  submitText: { fontSize: 17, fontFamily: Fonts.bodyBold },
 });

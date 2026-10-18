@@ -1,57 +1,31 @@
 /**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://unistyl.es/), etc.
+ * The "Noć" (night) look: one dark palette for the whole app, like a club after
+ * midnight. Vibe score colors stay in src/lib/vibe.ts.
  */
 
-import { Platform, useColorScheme } from 'react-native';
-
 export const Colors = {
-  light: {
-    text: '#000000',
-    background: '#ffffff',
-    backgroundElement: '#F0F0F3',
-    backgroundSelected: '#E0E1E6',
-    textSecondary: '#60646C',
-  },
-  dark: {
-    text: '#ffffff',
-    background: '#000000',
-    backgroundElement: '#212225',
-    backgroundSelected: '#2E3135',
-    textSecondary: '#B0B4BA',
-  },
+  text: '#F3EEFF',
+  textSecondary: '#B7A9D6',
+  background: '#140F24',
+  backgroundElement: '#211A36',
+  backgroundSelected: '#2E2548',
+  accent: '#FF4D8D',
+  accentWarm: '#FFB23E',
+  onAccent: '#FFFFFF',
+  danger: '#FF6B6B',
 } as const;
 
 export function useColors() {
-  return Colors[useColorScheme() === 'dark' ? 'dark' : 'light'];
+  return Colors;
 }
 
-export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
-
-export const Fonts = Platform.select({
-  ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
-    sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
-    serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
-    rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
-    mono: 'ui-monospace',
-  },
-  default: {
-    sans: 'normal',
-    serif: 'serif',
-    rounded: 'normal',
-    mono: 'monospace',
-  },
-  web: {
-    sans: 'system-ui, sans-serif',
-    serif: 'Georgia, serif',
-    rounded: 'system-ui, sans-serif',
-    mono: 'ui-monospace, monospace',
-  },
-});
+// Loaded in src/app/_layout.tsx; the names are the keys passed to useFonts().
+export const Fonts = {
+  display: 'Unbounded_800ExtraBold',
+  displayBold: 'Unbounded_700Bold',
+  body: 'Manrope_500Medium',
+  bodyBold: 'Manrope_700Bold',
+} as const;
 
 export const Spacing = {
   half: 2,
