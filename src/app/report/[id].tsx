@@ -1,13 +1,13 @@
 import * as Location from 'expo-location';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { VideoRecorder, type RecordedVideo } from '@/components/video-recorder';
 import { Colors, Fonts, Spacing, useColors } from '@/constants/theme';
 import { useAuth } from '@/lib/auth';
 import { VIDEO_BUCKET, supabase } from '@/lib/supabase';
-import { CROWD_LABELS, VIBE_EMOJI, errorMessage } from '@/lib/vibe';
+import { CROWD_LABELS, MUSIC_GENRES, VIBE_EMOJI, errorMessage } from '@/lib/vibe';
 
 export default function ReportScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -15,7 +15,7 @@ export default function ReportScreen() {
   const { session } = useAuth();
   const [vibe, setVibe] = useState<number | null>(null);
   const [crowd, setCrowd] = useState<number | null>(null);
-  const [genre, setGenre] = useState('');
+  const [genre, setGenre] = useState<string | null>(null);
   const [video, setVideo] = useState<RecordedVideo | null>(null);
   const [recorderOpen, setRecorderOpen] = useState(false);
   const [sending, setSending] = useState(false);
@@ -61,7 +61,7 @@ export default function ReportScreen() {
         p_lng: coords.longitude,
         p_vibe: vibe,
         p_crowd: crowd,
-        p_music_genre: genre.trim() || null,
+        p_music_genre: genre,
         p_comment: null,
         p_video_path: videoPath,
         p_video_duration_s: video?.durationS ?? null,
@@ -101,13 +101,15 @@ export default function ReportScreen() {
         ))}
       </View>
 
-      <TextInput
-        placeholder="Muzika (npr. house, narodna, rok)"
-        placeholderTextColor={colors.textSecondary}
-        value={genre}
-        onChangeText={setGenre}
-        style={[styles.input, text, { backgroundColor: colors.backgroundElement }]}
-      />
+      <Text style={[styles.label, text]}>Muzika</Text>
+      <View style={styles.genres}>
+        {MUSIC_GENRES.map(([icon, name]) => (
+          <Pressable key={name} style={[option(genre === name), styles.genre]} onPress={() => setGenre(genre === name ? null : name)}>
+            <Text style={styles.genreIcon}>{icon}</Text>
+            <Text style={[optionText(genre === name), styles.genreName]}>{name}</Text>
+          </Pressable>
+        ))}
+      </View>
 
       <Pressable style={[styles.option, { backgroundColor: colors.backgroundElement }]} onPress={() => (video ? setVideo(null) : setRecorderOpen(true))}>
         <Text style={text}>{video ? `🎥 Snimak ${video.durationS}s (ukloni)` : '🎥 Snimi atmosferu (do 60 s)'}</Text>
@@ -141,7 +143,10 @@ const styles = StyleSheet.create({
   options: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two },
   option: { paddingHorizontal: 16, paddingVertical: 12, borderRadius: 12, alignItems: 'center' },
   emoji: { fontSize: 26 },
-  input: { padding: Spacing.three, borderRadius: 12, fontSize: 16 },
+  genres: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two },
+  genre: { width: '31%', paddingHorizontal: 4, gap: 4 },
+  genreIcon: { fontSize: 26 },
+  genreName: { fontSize: 12, fontFamily: Fonts.bodyBold, textAlign: 'center' },
   error: { color: Colors.danger, fontSize: 15 },
   submit: { padding: Spacing.three, borderRadius: 999, alignItems: 'center' },
   submitText: { fontSize: 17, fontFamily: Fonts.bodyBold },

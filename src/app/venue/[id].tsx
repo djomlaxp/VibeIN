@@ -8,7 +8,7 @@ import { Fonts, Spacing, useColors } from '@/constants/theme';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 import type { Post, Venue, VibeNow, VibeReport } from '@/lib/types';
-import { CROWD_LABELS, POST_TYPE_LABELS, VENUE_TYPE_LABELS, VIBE_EMOJI, errorMessage, timeAgo } from '@/lib/vibe';
+import { CROWD_LABELS, POST_TYPE_LABELS, musicLabel, VENUE_TYPE_LABELS, VIBE_EMOJI, errorMessage, timeAgo } from '@/lib/vibe';
 
 // The reporter's GPS position (user_location) is not readable by clients, so
 // select('*') is refused; ask only for the columns the app is granted.
@@ -151,7 +151,7 @@ export default function VenueScreen() {
         {reports.map((r) => (
           <View key={r.id} style={[styles.card, { backgroundColor: colors.backgroundElement }]}>
             <Text style={text}>
-              {VIBE_EMOJI[r.vibe - 1]} {CROWD_LABELS[r.crowd]}{r.music_genre ? ` · ${r.music_genre}` : ''}
+              {VIBE_EMOJI[r.vibe - 1]} {CROWD_LABELS[r.crowd]}{r.music_genre ? ` · ${musicLabel(r.music_genre)}` : ''}
               <Text style={muted}>  {timeAgo(r.created_at)}</Text>
             </Text>
             {r.video_path && <VideoClip path={r.video_path} />}

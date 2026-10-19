@@ -19,6 +19,24 @@ export const POST_TYPE_LABELS = { promo: 'Promocija', event: 'Najava', info: 'Ob
 
 export const CROWD_LABELS = ['Prazno', 'Umereno', 'Puno', 'Krcato'];
 
+// Music choices in an atmosphere report; the name is what gets saved
+export const MUSIC_GENRES: [string, string][] = [
+  ['🎧', 'Elektronska'],
+  ['🎤', 'Pop'],
+  ['🪗', 'Narodna'],
+  ['🎸', 'Rok'],
+  ['🎙️', 'Rep'],
+  ['🎷', 'Džez'],
+  ['🎻', 'Tamburaši'],
+  ['🥁', 'Svirka uživo'],
+  ['🔇', 'Bez muzike'],
+];
+
+export function musicLabel(genre: string) {
+  const match = MUSIC_GENRES.find(([, name]) => name === genre);
+  return match ? `${match[0]} ${match[1]}` : genre;
+}
+
 export const VIBE_EMOJI = ['😴', '😐', '🙂', '😄', '🔥'];
 
 export function vibeColor(score: number | null) {
