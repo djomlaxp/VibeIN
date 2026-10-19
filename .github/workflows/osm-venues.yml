@@ -1,4 +1,4 @@
-# Pulls cafes, clubs, restaurants and stadiums in Pančevo from OpenStreetMap
+# Pulls (from a box around the town) cafes, clubs, restaurants and stadiums in Pančevo from OpenStreetMap
 # into supabase/osm-venues.csv so the list can be reviewed before import.
 name: Mesta sa OpenStreetMap-a
 
@@ -19,10 +19,10 @@ jobs:
       - run: |
           curl -sSf --retry 3 -A "VibeIN/1.0 (https://github.com/djomlaxp/VibeIN)" https://overpass-api.de/api/interpreter --data-urlencode 'data=
             [out:json][timeout:60];
-            area["name"="Pančevo"]["boundary"="administrative"]["admin_level"="8"]->.a;
-            (nwr["amenity"~"^(nightclub|bar|pub|cafe|restaurant|fast_food|events_venue|music_venue)$"](area.a);
-             nwr["leisure"="stadium"](area.a););
+            (nwr["amenity"~"^(nightclub|bar|pub|cafe|restaurant|fast_food|events_venue|music_venue)$"](44.835,20.600,44.905,20.700);
+             nwr["leisure"="stadium"](44.835,20.600,44.905,20.700););
             out center tags;' -o overpass.json
+          head -c 300 overpass.json; echo
           python3 scripts/osm-venues.py overpass.json > supabase/osm-venues.csv
           wc -l supabase/osm-venues.csv
       - run: |
