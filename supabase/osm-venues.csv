@@ -1,1 +1,109 @@
 name,type,osm_kind,lat,lng,address,osm_id
+Alexandria,cafe,cafe,44.872153,20.643665,,node/11815629722
+Amareto,cafe,cafe,44.871357,20.643871,,node/8463211038
+Azuro,cafe,cafe,44.883016,20.662665,Крајишка 35a,node/9253036680
+Babis,cafe,cafe,44.871059,20.636375,Браће Јовановића 1,node/4426899929
+Bardolino,cafe,cafe,44.869844,20.640486,,node/13514957367
+Bianco,cafe,cafe,44.869424,20.659666,Милоша Обреновића 12,way/1392981421
+Bombonjera,cafe,cafe,44.869573,20.643475,,node/9914657275
+Brasileiro,cafe,cafe,44.870453,20.642142,,node/12942545803
+Caffe Art,cafe,cafe,44.872154,20.647485,Немањина 2,node/6586343385
+Coffee District,cafe,cafe,44.875585,20.639830,Моше Пијаде 42,node/13991267312
+Coffee Shop,cafe,cafe,44.869969,20.640918,Сокаче 3,node/7034645721
+Coupe,cafe,cafe,44.871264,20.636917,,node/9123212194
+Cruiser,cafe,cafe,44.870654,20.638396,,node/9407858961
+Enigma,cafe,cafe,44.869559,20.635374,,node/9582289426
+Ermitaž,cafe,cafe,44.876407,20.648980,,node/13797980698
+Espacio,cafe,cafe,44.863962,20.667402,,node/8371847113
+Fresh Corner,cafe,cafe,44.871732,20.667584,,node/10047257509
+Galeria Caffe,cafe,cafe,44.868112,20.643437,,way/762439646
+Il Giardino,cafe,cafe,44.867805,20.659971,,node/8306086208
+Imperial,cafe,cafe,44.872002,20.638324,,node/9123212196
+Kakadu,cafe,pub,44.866614,20.638647,,way/966213500
+Magnolija Lux,cafe,cafe,44.877205,20.641014,,node/6468279755
+Monstrum,cafe,cafe,44.865722,20.640748,,node/9993471579
+Pacifico,cafe,cafe,44.871391,20.637274,,node/9123212193
+Pikaso,cafe,cafe,44.865040,20.667044,,node/5208673454
+Publica Pub,cafe,pub,44.871189,20.642615,,node/11299237011
+Slad Beer Shop & Tap,cafe,pub,44.868949,20.638992,Николе Тесле 11,way/758527735
+Sway,cafe,cafe,44.872057,20.649213,Ослобођења 10A,node/13642140527
+The City,cafe,cafe,44.869044,20.639014,,node/9582804295
+Two Dogs Cafe,cafe,cafe,44.870292,20.647313,Војводе Радомира Путника 24,node/12324547460
+Воз,cafe,pub,44.869338,20.636697,,node/286570804
+Киоск,cafe,cafe,44.880669,20.648164,,node/11772382856
+Код чика Николе,cafe,cafe,44.863096,20.639802,,node/11371908921
+Москва,cafe,cafe,44.865602,20.640276,,node/8318561556
+Пивара Дилема,cafe,pub,44.881541,20.639954,Синђелићева 58G,node/11030321506
+Под липом,cafe,pub,44.868177,20.644086,,node/8463211035
+Тамиш 1926,cafe,cafe,44.869367,20.634798,,node/10201877039
+Трећи простор,cafe,cafe,44.871574,20.643914,Његошева 11a,node/11771706561
+Штаб Погон,cafe,cafe,44.871532,20.641868,Трг краља Петра I 1,node/7272017336
+Minesal,club,bar,44.884293,20.662888,,node/13297192014
+Галаксија Гарден,club,bar,44.867909,20.636821,,way/836843570
+Круна & Cactus,club,bar,44.868279,20.640352,,node/9909480537
+Arč,restaurant,restaurant,44.882520,20.662701,Македонска 9,way/768770941
+Baden Baden,restaurant,restaurant,44.871534,20.642391,,node/3642019672
+Borneo,restaurant,restaurant,44.871023,20.642654,,node/8463211039
+Buba,restaurant,fast_food,44.866699,20.640990,,node/11477316349
+Burrito Madre,restaurant,fast_food,44.867642,20.659744,,node/9004214883
+Casa Fiesta,restaurant,fast_food,44.871221,20.636793,,node/9818172323
+Cheese 'n Beef,restaurant,fast_food,44.868986,20.640814,,node/13033279869
+Chicken Boss,restaurant,fast_food,44.871172,20.637273,,node/9123289539
+Circus,restaurant,restaurant,44.874616,20.652624,,node/13060106102
+Dolce Pizza,restaurant,fast_food,44.869624,20.643471,,node/13299451907
+Don Kihot,restaurant,restaurant,44.869688,20.635306,,node/10574318111
+Espacio,restaurant,restaurant,44.865381,20.666901,,node/8341571126
+Giros kod Grka,restaurant,fast_food,44.869526,20.640796,,node/8928745235
+Grill Bum - Kod keve,restaurant,fast_food,44.868924,20.640168,Николе Тесле,node/9241620193
+Grill Rustico,restaurant,fast_food,44.869101,20.653082,,node/9922404975
+Hitomi,restaurant,restaurant,44.871522,20.644386,,node/12310488697
+Jiji Food,restaurant,fast_food,44.870061,20.645442,,node/8379741792
+Kiosk,restaurant,fast_food,44.871710,20.644679,,node/12138461052
+Kod Bate,restaurant,fast_food,44.870057,20.645390,,node/8379741793
+KPG,restaurant,fast_food,44.867675,20.660089,,node/9004214888
+Kula,restaurant,restaurant,44.865823,20.639873,,node/10162269338
+McDonald's,restaurant,fast_food,44.866651,20.660521,Првомајска,node/3806731152
+Meng Qi 63,restaurant,fast_food,44.869705,20.640146,,node/13514956660
+Meng Qi Marija,restaurant,fast_food,44.865614,20.640881,,node/12391515884
+Milky Family Club,restaurant,restaurant,44.880636,20.663889,Македонска,way/768271807
+Mood,restaurant,restaurant,44.869410,20.659504,,way/1392981422
+New York Slice,restaurant,fast_food,44.869629,20.642189,Војводе Радомира Путника,node/8367163318
+Pizza grill 023,restaurant,fast_food,44.848763,20.672300,,node/13727155078
+Pizza Shop,restaurant,fast_food,44.872329,20.644273,,node/9934603487
+Poco Loco,restaurant,restaurant,44.871544,20.637804,Браће Јовановића 15,node/9107183988
+Popaj,restaurant,fast_food,44.870663,20.647259,,node/7253545027
+Porto In,restaurant,restaurant,44.871237,20.639951,,node/9582289425
+Romantic,restaurant,restaurant,44.871350,20.669621,Баваништански пут 31,node/14005201701
+Royal Burger,restaurant,fast_food,44.867663,20.659954,,node/9004214886
+Sechuan 168,restaurant,restaurant,44.869747,20.655641,,node/9904460414
+Soulfood,restaurant,restaurant,44.869526,20.660637,Милоша Обреновића 12,way/1392981415
+Stara Vajfertova pivara,restaurant,restaurant,44.868694,20.639583,Николе Тесле 2,way/758528957
+Stari Žar,restaurant,fast_food,44.864411,20.666732,,node/8369859099
+Walter,restaurant,restaurant,44.873099,20.642647,,node/11861899133
+Zen,restaurant,restaurant,44.869445,20.658202,,node/11867475924
+Ало ало,restaurant,fast_food,44.870563,20.645490,,node/8741453486
+Ацин ранч,restaurant,restaurant,44.873934,20.616763,Дубока бара нова 1 18b,way/820261247
+Ветрењача,restaurant,restaurant,44.869114,20.636239,Трг мученика,node/8367100335
+Катарка,restaurant,restaurant,44.872792,20.637823,,node/10778874036
+Кафана Шаран,restaurant,restaurant,44.869537,20.634511,,node/5988040568
+Клуб Двориште,restaurant,restaurant,44.869489,20.658478,Милоша Обреновића 8b,node/8072372006
+Код тетке,restaurant,fast_food,44.869638,20.642254,Војводе Радомира Путника,node/8367163319
+Код Тому Лесковчанина,restaurant,fast_food,44.869530,20.642716,,node/9914496497
+Код ђенерала,restaurant,fast_food,44.871783,20.644205,,node/9934603486
+Кокошка,restaurant,restaurant,44.869828,20.641004,Сокаче 3,node/7034627582
+Коноба 32,restaurant,restaurant,44.870140,20.637556,,node/9917413801
+Кордун,restaurant,restaurant,44.871765,20.638397,,node/9109390538
+Мала Коноба,restaurant,restaurant,44.868748,20.642876,Мите Топаловића 12,way/758897364
+Партизан,restaurant,fast_food,44.873805,20.637224,,node/3358987393
+Пилећи дућан,restaurant,restaurant,44.868541,20.660290,Милоша Обреновића 12,way/1274377960
+Попај,restaurant,fast_food,44.870007,20.643010,,node/8379754652
+Стара воденица,restaurant,restaurant,44.870431,20.608170,,way/820238678
+Степин вајат,restaurant,fast_food,44.872814,20.650366,,node/10789762264
+Трешњица,restaurant,restaurant,44.870350,20.641816,,node/12942545804
+Хало Лесковац,restaurant,fast_food,44.871188,20.649158,,node/6469468153
+Хало Лесковац,restaurant,fast_food,44.871191,20.636673,,node/8939132661
+Цакимил,restaurant,fast_food,44.868631,20.650886,,node/9947309442
+Цитадела,restaurant,restaurant,44.876747,20.633030,,node/7613553342
+Шајка,restaurant,restaurant,44.865192,20.637930,,way/1311199403
+Шиш ћевап,restaurant,fast_food,44.870464,20.648483,,node/7154873248
+ФК Динамо,stadium,stadium,44.870500,20.651945,,way/689931023
