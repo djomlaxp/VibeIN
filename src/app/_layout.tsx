@@ -44,6 +44,7 @@ export default function RootLayout() {
           <Stack.Screen name="index" options={{ title: 'VibeIN', headerTitle: () => <Logo /> }} />
           <Stack.Screen name="venue/[id]" options={{ title: '' }} />
           <Stack.Screen name="report/[id]" options={{ title: 'Prijavi atmosferu', presentation: 'modal' }} />
+          <Stack.Screen name="map" options={{ title: 'Mapa' }} />
           <Stack.Screen name="notifications" options={{ title: 'Obaveštenja' }} />
           <Stack.Screen name="login" options={{ title: 'Prijava', presentation: 'modal' }} />
           <Stack.Screen name="new-password" options={{ title: 'Nova lozinka' }} />
