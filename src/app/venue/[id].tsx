@@ -1,6 +1,6 @@
 import { Stack, router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { VibeBadge } from '@/components/vibe-badge';
 import { VideoClip } from '@/components/video-clip';
@@ -85,6 +85,12 @@ export default function VenueScreen() {
         </Pressable>
       )}
 
+      <Pressable
+        onPress={() => Linking.openURL(`https://www.google.com/maps/dir/?api=1&destination=${venue.lat},${venue.lng}`)}
+        style={[styles.button, styles.outline, { borderColor: colors.backgroundSelected }]}>
+        <Text style={[styles.buttonText, text]}>Vodi me do mesta</Text>
+      </Pressable>
+
       {venue.description && <Text style={[text, styles.paragraph]}>{venue.description}</Text>}
 
       {posts.length > 0 && (
@@ -149,6 +155,7 @@ const styles = StyleSheet.create({
   live: { fontFamily: Fonts.bodyBold, fontSize: 12, letterSpacing: 1 },
   title: { fontFamily: Fonts.display, fontSize: 24 },
   button: { padding: Spacing.three, borderRadius: 999, alignItems: 'center' },
+  outline: { borderWidth: 2 },
   buttonText: { fontSize: 17, fontFamily: Fonts.bodyBold },
   paragraph: { fontSize: 16, lineHeight: 22 },
   sectionTitle: { fontSize: 18, fontFamily: Fonts.displayBold },
