@@ -111,7 +111,7 @@ export default function ReportScreen() {
           const Icon = genreIcon(name);
           return (
             <Pressable key={name} style={[option(genre === name), styles.genre]} onPress={() => setGenre(genre === name ? null : name)}>
-              <Icon size={26} color={genre === name ? colors.onAccent : colors.text} />
+              <Icon size={30} color={genre === name ? colors.onAccent : colors.text} />
               <Text style={[optionText(genre === name), styles.genreName]}>{name}</Text>
             </Pressable>
           );

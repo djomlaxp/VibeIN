@@ -4,7 +4,7 @@ import { Archive, AtSign, BadgeCheck, Clock, Flame, Globe, Navigation, Pencil, P
 import { useCallback, useState } from 'react';
 import { Alert, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { VIBE_ICONS, genreIcon } from '@/components/icons';
+import { VIBE_ICONS, genreIcon, type IconComponent } from '@/components/icons';
 import { POST_ICONS, VenueAvatar } from '@/components/venue-avatar';
 import { VideoClip } from '@/components/video-clip';
 import { Fonts, LiveGradient, Spacing, useColors } from '@/constants/theme';
@@ -239,7 +239,7 @@ function Stat({ value, label, color }: { value: string; label: string; color: st
   );
 }
 
-function Chip({ icon: Icon, label, color }: { icon: LucideIcon; label: string; color: string }) {
+function Chip({ icon: Icon, label, color }: { icon: IconComponent; label: string; color: string }) {
   const colors = useColors();
   return (
     <View style={[styles.chip, { backgroundColor: colors.backgroundElement }]}>
