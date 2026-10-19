@@ -14,7 +14,7 @@ type Row = Venue & { now?: VibeNow; distance?: number };
 
 export default function VenueList() {
   const colors = useColors();
-  const { session, recovering } = useAuth();
+  const { session, role, recovering } = useAuth();
   const [venues, setVenues] = useState<Venue[]>([]);
   const [vibes, setVibes] = useState<Record<string, VibeNow>>({});
   const [filter, setFilter] = useState<VenueType | null>(null);
@@ -86,6 +86,11 @@ export default function VenueList() {
               <Link href="/map">
                 <Text style={{ color: colors.accent, fontFamily: Fonts.bodyBold }}>Mapa</Text>
               </Link>
+              {role === 'admin' && (
+                <Link href="/admin">
+                  <Text style={{ color: colors.accentWarm, fontFamily: Fonts.bodyBold }}>Admin</Text>
+                </Link>
+              )}
               {session && (
                 <Link href="/notifications">
                   <Text style={{ color: colors.text }}>🔔{unread > 0 ? ` ${unread}` : ''}</Text>

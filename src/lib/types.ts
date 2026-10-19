@@ -9,6 +9,8 @@ export type Venue = {
   description: string | null;
   owner_id: string | null;
   verified: boolean;
+  opening_hours: { text?: string } | null;
+  contact: { phone?: string | null; instagram?: string | null; website?: string | null } | null;
   lat: number;
   lng: number;
 };
@@ -55,4 +57,14 @@ export type AppNotification = {
   created_at: string;
   venue: { name: string } | null;
   report: { video_path: string | null; archived: boolean; archive_withdrawn: boolean } | null;
+};
+
+export type VenueClaim = {
+  id: string;
+  venue_id: string;
+  user_id: string;
+  proof: string | null;
+  status: 'pending' | 'approved' | 'rejected';
+  created_at: string;
+  venue: { name: string } | null;
 };

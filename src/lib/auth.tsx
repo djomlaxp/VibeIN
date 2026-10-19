@@ -6,6 +6,7 @@ import { openedFromRecoveryLink, supabase } from './supabase';
 type AuthState = {
   session: Session | null;
   loading: boolean;
+  role: 'user' | 'owner' | 'admin' | null;
   // True after opening a password reset link, until a new password is saved.
   recovering: boolean;
   setRecovering: (value: boolean) => void;
@@ -14,6 +15,7 @@ type AuthState = {
 const AuthContext = createContext<AuthState>({
   session: null,
   loading: true,
+  role: null,
   recovering: false,
   setRecovering: () => {},
 });
@@ -22,6 +24,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [recovering, setRecovering] = useState(openedFromRecoveryLink);
+  const [role, setRole] = useState<AuthState['role']>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -35,7 +38,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => data.subscription.unsubscribe();
   }, []);
 
-  return <AuthContext.Provider value={{ session, loading, recovering, setRecovering }}>{children}</AuthContext.Provider>;
+  const userId = session?.user.id;
+  useEffect(() => {
+    if (!userId) return setRole(null);
+    supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', userId)
+      .single()
+      .then(({ data }) => setRole((data?.role as AuthState['role']) ?? 'user'));
+  }, [userId]);
+
+  return <AuthContext.Provider value={{ session, loading, role, recovering, setRecovering }}>{children}</AuthContext.Provider>;
 }
 
 export const useAuth = () => useContext(AuthContext);
