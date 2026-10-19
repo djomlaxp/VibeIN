@@ -1,22 +1,18 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, router, useFocusEffect, useLocalSearchParams } from 'expo-router';
-import { Archive, AtSign, BadgeCheck, Clock, Flame, Globe, Navigation, Pencil, Phone, Plus, Trash2, Users, type LucideIcon } from 'lucide-react-native';
+import { AtSign, BadgeCheck, Flame, Globe, Grid3x3, Heart, Navigation, Pencil, Phone, Pin, Play, Plus, Star, Trash2, type LucideIcon } from 'lucide-react-native';
 import { useCallback, useState } from 'react';
 import { Alert, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { VIBE_ICONS, genreIcon, type IconComponent } from '@/components/icons';
 import { POST_ICONS, VenueAvatar } from '@/components/venue-avatar';
-import { VideoClip } from '@/components/video-clip';
+import { VenueMedia } from '@/components/venue-media';
 import { Fonts, LiveGradient, Spacing, useColors } from '@/constants/theme';
 import { useAuth } from '@/lib/auth';
+import { REPORT_COLUMNS, useCity } from '@/lib/city';
 import { supabase } from '@/lib/supabase';
 import type { Post, Venue, VibeNow, VibeReport } from '@/lib/types';
 import { CROWD_LABELS, POST_TYPE_LABELS, VENUE_TYPE_LABELS, errorMessage, timeAgo, vibeColor } from '@/lib/vibe';
-
-// The reporter's GPS position (user_location) is not readable by clients, so
-// select('*') is refused; ask only for the columns the app is granted.
-const REPORT_COLUMNS =
-  'id, venue_id, user_id, vibe, crowd, music_genre, video_path, video_duration_s, video_expires_at, archived, archive_withdrawn, created_at';
 
 export default function VenueScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -28,6 +24,9 @@ export default function VenueScreen() {
   const [archived, setArchived] = useState<VibeReport[]>([]);
   const [posts, setPosts] = useState<Post[]>([]);
   const [claimPending, setClaimPending] = useState(false);
+  const [openPost, setOpenPost] = useState<string | null>(null);
+  const [gridTab, setGridTab] = useState<'recent' | 'archive'>('recent');
+  const { favorites, toggleFavorite } = useCity();
 
   const load = useCallback(async () => {
     const since = new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString();
@@ -73,10 +72,21 @@ export default function VenueScreen() {
 
   const text = { color: colors.text };
   const muted = { color: colors.textSecondary };
+  const saved = favorites.has(venue.id);
+  const shownPost = posts.find((p) => p.id === openPost);
+  const tiles = gridTab === 'recent' ? reports : archived;
+
+  async function save() {
+    if (!(await toggleFavorite(venue!.id))) router.push('/login');
+  }
+
+  function openClip(r: VibeReport) {
+    router.push({ pathname: '/live', params: { venue: venue!.id, clips: '1', report: r.id } });
+  }
 
   return (
     <ScrollView style={{ backgroundColor: colors.background }} contentContainerStyle={styles.content}>
-      <Stack.Screen options={{ title: '' }} />
+      <Stack.Screen options={{ title: venue.name }} />
 
       <View style={styles.profile}>
         <VenueAvatar type={venue.type} size={88} live={!!now?.report_count} />
@@ -92,11 +102,15 @@ export default function VenueScreen() {
           <Text style={[styles.title, text]}>{venue.name}</Text>
           {venue.verified && <BadgeCheck size={20} color={colors.accent} />}
         </View>
-        <Text style={muted}>{VENUE_TYPE_LABELS[venue.type]}{venue.address ? ` · ${venue.address}` : ''}</Text>
+        <Text style={muted}>
+          {VENUE_TYPE_LABELS[venue.type]}
+          {venue.address ? ` · ${venue.address}` : ''}
+          {venue.opening_hours?.text ? ` · ${venue.opening_hours.text}` : ''}
+        </Text>
+        {venue.description && <Text style={[text, styles.paragraph]}>{venue.description}</Text>}
         {!!now?.report_count && (
           <View style={styles.chips}>
-            <Chip icon={Flame} label={`Uživo · ${now.last_report_at ? timeAgo(now.last_report_at) : ''}`} color={colors.accent} />
-            {now.crowd != null && <Chip icon={Users} label={CROWD_LABELS[now.crowd]} color={colors.text} />}
+            <Chip icon={Flame} label={`Uživo · ${now.crowd != null ? CROWD_LABELS[now.crowd] : timeAgo(now.last_report_at ?? '')}`} color={colors.accent} />
             {!!reports[0]?.music_genre && <Chip icon={genreIcon(reports[0].music_genre)} label={reports[0].music_genre} color={colors.text} />}
           </View>
         )}
@@ -117,13 +131,13 @@ export default function VenueScreen() {
           compact={isOwner}
           onPress={() => Linking.openURL(`https://www.google.com/maps/dir/?api=1&destination=${venue.lat},${venue.lng}`)}
         />
+        <Pressable onPress={save} aria-label={saved ? 'Ukloni iz omiljenih' : 'Sačuvaj'} style={[styles.heart, { backgroundColor: colors.backgroundElement }]}>
+          <Heart size={20} color={saved ? colors.accent : colors.text} fill={saved ? colors.accent : 'transparent'} />
+        </Pressable>
       </View>
 
-      {venue.description && <Text style={[text, styles.paragraph]}>{venue.description}</Text>}
-
-      {!!(venue.opening_hours?.text || venue.contact?.phone || venue.contact?.instagram || venue.contact?.website) && (
+      {!!(venue.contact?.phone || venue.contact?.instagram || venue.contact?.website) && (
         <View style={[styles.card, { backgroundColor: colors.backgroundElement }]}>
-          {!!venue.opening_hours?.text && <Info icon={Clock} value={venue.opening_hours.text} />}
           {!!venue.contact?.phone && <Info icon={Phone} value={venue.contact.phone} url={`tel:${venue.contact.phone.replace(/\s/g, '')}`} />}
           {!!venue.contact?.instagram && (
             <Info icon={AtSign} value={venue.contact.instagram.replace(/^@/, '')} url={`https://instagram.com/${venue.contact.instagram.replace(/^@/, '')}`} />
@@ -132,54 +146,64 @@ export default function VenueScreen() {
         </View>
       )}
 
-      {posts.length > 0 && (
-        <Section title="Promocije i najave" color={colors.text}>
+      {(posts.length > 0 || archived.length > 0) && (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.highlights}>
           {posts.map((p) => (
-            <View key={p.id} style={[styles.card, { backgroundColor: colors.backgroundElement }]}>
-              <PostLabel type={p.type} />
-              <Text style={[styles.cardTitle, { color: colors.accentWarm }]}>{p.title}</Text>
-              {p.body && <Text style={muted}>{p.body}</Text>}
-              {isOwner && (
-                <Pressable onPress={() => deletePost(p)} style={styles.inline}>
-                  <Trash2 size={16} color={colors.textSecondary} />
-                  <Text style={[styles.link, muted]}>Obriši objavu</Text>
-                </Pressable>
-              )}
-            </View>
+            <Highlight key={p.id} icon={POST_ICONS[p.type]} label={p.title} on={openPost === p.id} onPress={() => setOpenPost(openPost === p.id ? null : p.id)} />
           ))}
-        </Section>
+          {archived.length > 0 && <Highlight icon={Star} label="Najbolje" on={gridTab === 'archive'} onPress={() => setGridTab('archive')} />}
+        </ScrollView>
       )}
 
-      <Section title="Poslednje prijave" color={colors.text}>
-        {reports.length === 0 && <Text style={muted}>Još niko nije prijavio atmosferu u poslednja 3 sata.</Text>}
-        {reports.map((r) => (
-          <View key={r.id} style={[styles.card, { backgroundColor: colors.backgroundElement }]}>
-            <ReportLine report={r} />
-            {r.video_path && <VideoClip path={r.video_path} />}
-            {isOwner && r.video_path && !r.archive_withdrawn && (
-              <Pressable onPress={() => toggleArchive(r)} style={styles.inline}>
-                <Archive size={16} color={colors.textSecondary} />
-                <Text style={[styles.link, muted]}>{r.archived ? 'Ukloni iz arhive' : 'Arhiviraj na profilu'}</Text>
+      {shownPost && (
+        <View style={[styles.card, { backgroundColor: colors.backgroundElement }]}>
+          <PostLabel type={shownPost.type} />
+          <Text style={[styles.cardTitle, { color: colors.accentWarm }]}>{shownPost.title}</Text>
+          {shownPost.body && <Text style={muted}>{shownPost.body}</Text>}
+          {isOwner && (
+            <Pressable onPress={() => deletePost(shownPost)} style={styles.inline}>
+              <Trash2 size={16} color={colors.textSecondary} />
+              <Text style={[styles.link, muted]}>Obriši objavu</Text>
+            </Pressable>
+          )}
+        </View>
+      )}
+
+      <View>
+        <View style={[styles.gridTabs, { borderColor: colors.backgroundElement }]}>
+          {(['recent', 'archive'] as const).map((t) => {
+            const Icon = t === 'recent' ? Grid3x3 : Pin;
+            const on = gridTab === t;
+            return (
+              <Pressable key={t} onPress={() => setGridTab(t)} aria-label={t === 'recent' ? 'Prijave' : 'Arhiva'} style={[styles.gridTab, on && { borderColor: colors.accent }]}>
+                <Icon size={22} color={on ? colors.text : colors.textSecondary} />
               </Pressable>
-            )}
+            );
+          })}
+        </View>
+        {tiles.length === 0 ? (
+          <Text style={[muted, styles.center, { paddingVertical: Spacing.four }]}>
+            {gridTab === 'recent' ? 'Još niko nije prijavio atmosferu u poslednja 3 sata.' : 'Vlasnik još nije sačuvao nijedan snimak.'}
+          </Text>
+        ) : (
+          <View style={styles.grid}>
+            {tiles.map((r) => (
+              <Pressable key={r.id} style={styles.tile} onPress={() => (r.video_path ? openClip(r) : undefined)}>
+                <VenueMedia type={venue.type} videoPath={r.video_path} playing={false} style={StyleSheet.absoluteFill}>
+                  {r.video_path && <Play size={16} color="#fff" fill="#fff" style={styles.tilePlay} />}
+                  {!r.video_path && <TileReport report={r} />}
+                  <Text style={styles.tileTime}>{timeAgo(r.created_at)}</Text>
+                  {isOwner && r.video_path && !r.archive_withdrawn && (
+                    <Pressable onPress={() => toggleArchive(r)} aria-label={r.archived ? 'Ukloni iz arhive' : 'Arhiviraj na profilu'} style={styles.tileStar} hitSlop={6}>
+                      <Star size={18} color={colors.accentWarm} fill={r.archived ? colors.accentWarm : 'transparent'} />
+                    </Pressable>
+                  )}
+                </VenueMedia>
+              </Pressable>
+            ))}
           </View>
-        ))}
-      </Section>
-
-      {archived.length > 0 && (
-        <Section title="Arhiva snimaka" color={colors.text}>
-          {archived.map((r) => (
-            <View key={r.id} style={[styles.card, { backgroundColor: colors.backgroundElement }]}>
-              {r.video_path && <VideoClip path={r.video_path} />}
-              {isOwner && (
-                <Pressable onPress={() => toggleArchive(r)}>
-                  <Text style={[styles.link, text]}>Ukloni iz arhive</Text>
-                </Pressable>
-              )}
-            </View>
-          ))}
-        </Section>
-      )}
+        )}
+      </View>
 
       {!venue.owner_id &&
         (claimPending ? (
@@ -209,23 +233,32 @@ function Info({ icon: Icon, value, url }: { icon: LucideIcon; value: string; url
   );
 }
 
-function ReportLine({ report: r }: { report: VibeReport }) {
+// A report without a clip, shown as a grid tile: the vibe face and the music
+function TileReport({ report: r }: { report: VibeReport }) {
   const colors = useColors();
   const VibeIcon = VIBE_ICONS[r.vibe - 1];
   const GenreIcon = r.music_genre ? genreIcon(r.music_genre) : null;
-  const text = { color: colors.text };
   return (
-    <View style={[styles.inline, { flexWrap: 'wrap' }]}>
-      <VibeIcon size={18} color={vibeColor(r.vibe)} />
-      <Text style={text}>{CROWD_LABELS[r.crowd]}</Text>
-      {GenreIcon && (
-        <>
-          <GenreIcon size={16} color={colors.textSecondary} />
-          <Text style={text}>{r.music_genre}</Text>
-        </>
-      )}
-      <Text style={{ color: colors.textSecondary }}>{timeAgo(r.created_at)}</Text>
+    <View style={[StyleSheet.absoluteFill, styles.tileReport, { backgroundColor: colors.backgroundElement }]}>
+      <VibeIcon size={30} color={vibeColor(r.vibe)} />
+      <Text style={[styles.tileLabel, { color: colors.text }]}>{CROWD_LABELS[r.crowd]}</Text>
+      {GenreIcon && <GenreIcon size={20} color={colors.textSecondary} />}
     </View>
+  );
+}
+
+// Round shortcut under the profile, like story highlights
+function Highlight({ icon: Icon, label, on, onPress }: { icon: LucideIcon; label: string; on: boolean; onPress: () => void }) {
+  const colors = useColors();
+  return (
+    <Pressable onPress={onPress} style={styles.highlight}>
+      <View style={[styles.highlightCircle, { borderColor: on ? colors.accent : colors.backgroundSelected, backgroundColor: colors.backgroundElement }]}>
+        <Icon size={26} color={on ? colors.accent : colors.text} />
+      </View>
+      <Text numberOfLines={1} style={[styles.highlightText, { color: colors.text }]}>
+        {label}
+      </Text>
+    </Pressable>
   );
 }
 
@@ -282,15 +315,6 @@ function Action({ icon: Icon, label, onPress, primary, compact }: { icon: Lucide
   );
 }
 
-function Section({ title, color, children }: { title: string; color: string; children: React.ReactNode }) {
-  return (
-    <View style={{ gap: Spacing.two }}>
-      <Text style={[styles.sectionTitle, { color }]}>{title}</Text>
-      {children}
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   content: { padding: Spacing.three, gap: Spacing.four, maxWidth: 800, width: '100%', alignSelf: 'center' },
   profile: { flexDirection: 'row', alignItems: 'center', gap: Spacing.four },
@@ -310,8 +334,21 @@ const styles = StyleSheet.create({
   center: { textAlign: 'center' },
   postType: { fontFamily: Fonts.bodyBold, fontSize: 11, letterSpacing: 1 },
   paragraph: { fontSize: 16, lineHeight: 22 },
-  sectionTitle: { fontSize: 18, fontFamily: Fonts.displayBold },
   card: { padding: Spacing.three, borderRadius: 16, gap: Spacing.two },
+  heart: { width: 48, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  highlights: { gap: Spacing.three },
+  highlight: { width: 72, alignItems: 'center', gap: 4 },
+  highlightCircle: { width: 64, height: 64, borderRadius: 32, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
+  highlightText: { fontFamily: Fonts.body, fontSize: 12, maxWidth: 72 },
+  gridTabs: { flexDirection: 'row', borderTopWidth: 1 },
+  gridTab: { flex: 1, alignItems: 'center', paddingVertical: 12, borderTopWidth: 2, borderColor: 'transparent', marginTop: -1 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 2 },
+  tile: { width: '32.9%', aspectRatio: 3 / 4 },
+  tileReport: { alignItems: 'center', justifyContent: 'center', gap: 6 },
+  tileLabel: { fontFamily: Fonts.bodyBold, fontSize: 13 },
+  tilePlay: { position: 'absolute', top: 8, right: 8 },
+  tileTime: { position: 'absolute', left: 8, bottom: 6, color: '#fff', fontFamily: Fonts.bodyBold, fontSize: 12 },
+  tileStar: { position: 'absolute', top: 6, left: 6 },
   cardTitle: { fontFamily: Fonts.bodyBold, fontSize: 16 },
   link: { textDecorationLine: 'underline' },
 });
