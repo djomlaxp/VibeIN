@@ -45,6 +45,10 @@ export default function RootLayout() {
           <Stack.Screen name="venue/[id]" options={{ title: '' }} />
           <Stack.Screen name="report/[id]" options={{ title: 'Prijavi atmosferu', presentation: 'modal' }} />
           <Stack.Screen name="map" options={{ title: 'Mapa' }} />
+          <Stack.Screen name="claim/[id]" options={{ title: 'Preuzmi profil mesta', presentation: 'modal' }} />
+          <Stack.Screen name="edit/[id]" options={{ title: 'Uredi profil mesta' }} />
+          <Stack.Screen name="post/[id]" options={{ title: 'Nova objava', presentation: 'modal' }} />
+          <Stack.Screen name="admin" options={{ title: 'Admin' }} />
           <Stack.Screen name="notifications" options={{ title: 'Obaveštenja' }} />
           <Stack.Screen name="login" options={{ title: 'Prijava', presentation: 'modal' }} />
           <Stack.Screen name="new-password" options={{ title: 'Nova lozinka' }} />

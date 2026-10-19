@@ -15,6 +15,8 @@ export const VENUE_TYPE_LABELS: Record<VenueType, string> = {
   stadium: 'Stadion',
 };
 
+export const POST_TYPE_LABELS = { promo: 'Promocija', event: 'Najava', info: 'Obaveštenje' } as const;
+
 export const CROWD_LABELS = ['Prazno', 'Umereno', 'Puno', 'Krcato'];
 
 export const VIBE_EMOJI = ['😴', '😐', '🙂', '😄', '🔥'];
@@ -38,6 +40,10 @@ const ERROR_MESSAGES: Record<string, string> = {
   video_expired: 'Snimak je istekao i ne može se arhivirati.',
   archive_withdrawn: 'Autor je povukao ovaj snimak, ne može se ponovo arhivirati.',
   not_video_author: 'Samo autor može da povuče svoj snimak.',
+  venue_claims_one_pending: 'Već si poslao zahtev za ovo mesto. Javićemo ti kad ga pregledamo.',
+  not_admin: 'Ovo može samo administrator.',
+  claim_not_pending: 'Ovaj zahtev je već pregledan.',
+  'row-level security': 'Nemaš dozvolu za ovu izmenu.',
 };
 
 export function errorMessage(error: { message?: string } | null | undefined) {

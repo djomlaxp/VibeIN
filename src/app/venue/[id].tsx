@@ -8,7 +8,7 @@ import { Fonts, Spacing, useColors } from '@/constants/theme';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 import type { Post, Venue, VibeNow, VibeReport } from '@/lib/types';
-import { CROWD_LABELS, VENUE_TYPE_LABELS, VIBE_EMOJI, errorMessage, timeAgo } from '@/lib/vibe';
+import { CROWD_LABELS, POST_TYPE_LABELS, VENUE_TYPE_LABELS, VIBE_EMOJI, errorMessage, timeAgo } from '@/lib/vibe';
 
 // The reporter's GPS position (user_location) is not readable by clients, so
 // select('*') is refused; ask only for the columns the app is granted.
@@ -24,6 +24,7 @@ export default function VenueScreen() {
   const [reports, setReports] = useState<VibeReport[]>([]);
   const [archived, setArchived] = useState<VibeReport[]>([]);
   const [posts, setPosts] = useState<Post[]>([]);
+  const [claimPending, setClaimPending] = useState(false);
 
   const load = useCallback(async () => {
     const since = new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString();
@@ -40,7 +41,11 @@ export default function VenueScreen() {
     setReports((r.data as VibeReport[]) ?? []);
     setArchived((a.data as VibeReport[]) ?? []);
     setPosts((p.data as Post[]) ?? []);
-  }, [id]);
+    if (session && !(v.data as Venue | null)?.owner_id) {
+      const { data } = await supabase.from('venue_claims').select('id').eq('venue_id', id).eq('user_id', session.user.id).eq('status', 'pending');
+      setClaimPending(!!data?.length);
+    }
+  }, [id, session]);
 
   useFocusEffect(
     useCallback(() => {
@@ -53,6 +58,11 @@ export default function VenueScreen() {
   async function toggleArchive(report: VibeReport) {
     const { error } = await supabase.rpc('set_video_archived', { p_report_id: report.id, p_archived: !report.archived });
     if (error) Alert.alert('Arhiva', errorMessage(error));
+    load();
+  }
+
+  async function deletePost(post: Post) {
+    await supabase.from('posts').delete().eq('id', post.id);
     load();
   }
 
@@ -91,14 +101,46 @@ export default function VenueScreen() {
         <Text style={[styles.buttonText, text]}>Vodi me do mesta</Text>
       </Pressable>
 
+      {isOwner && (
+        <View style={styles.row}>
+          <Pressable
+            onPress={() => router.push({ pathname: '/post/[id]', params: { id: venue.id } })}
+            style={[styles.button, styles.half, { backgroundColor: colors.accent }]}>
+            <Text style={[styles.buttonText, { color: colors.onAccent }]}>Nova objava</Text>
+          </Pressable>
+          <Pressable
+            onPress={() => router.push({ pathname: '/edit/[id]', params: { id: venue.id } })}
+            style={[styles.button, styles.half, styles.outline, { borderColor: colors.backgroundSelected }]}>
+            <Text style={[styles.buttonText, text]}>Uredi profil</Text>
+          </Pressable>
+        </View>
+      )}
+
       {venue.description && <Text style={[text, styles.paragraph]}>{venue.description}</Text>}
+
+      {!!(venue.opening_hours?.text || venue.contact?.phone || venue.contact?.instagram || venue.contact?.website) && (
+        <View style={[styles.card, { backgroundColor: colors.backgroundElement }]}>
+          {!!venue.opening_hours?.text && <Info label="Radno vreme" value={venue.opening_hours.text} />}
+          {!!venue.contact?.phone && <Info label="Telefon" value={venue.contact.phone} url={`tel:${venue.contact.phone.replace(/\s/g, '')}`} />}
+          {!!venue.contact?.instagram && (
+            <Info label="Instagram" value={venue.contact.instagram} url={`https://instagram.com/${venue.contact.instagram.replace(/^@/, '')}`} />
+          )}
+          {!!venue.contact?.website && <Info label="Sajt" value={venue.contact.website} url={venue.contact.website} />}
+        </View>
+      )}
 
       {posts.length > 0 && (
         <Section title="Promocije i najave" color={colors.text}>
           {posts.map((p) => (
             <View key={p.id} style={[styles.card, { backgroundColor: colors.backgroundElement }]}>
+              <Text style={[styles.postType, muted]}>{POST_TYPE_LABELS[p.type].toUpperCase()}</Text>
               <Text style={[styles.cardTitle, { color: colors.accentWarm }]}>{p.title}</Text>
               {p.body && <Text style={muted}>{p.body}</Text>}
+              {isOwner && (
+                <Pressable onPress={() => deletePost(p)}>
+                  <Text style={[styles.link, text]}>Obriši objavu</Text>
+                </Pressable>
+              )}
             </View>
           ))}
         </Section>
@@ -136,7 +178,28 @@ export default function VenueScreen() {
           ))}
         </Section>
       )}
+
+      {!venue.owner_id &&
+        (claimPending ? (
+          <Text style={[muted, styles.center]}>Tvoj zahtev da upravljaš ovim mestom čeka odobrenje.</Text>
+        ) : (
+          <Pressable onPress={() => router.push(session ? { pathname: '/claim/[id]', params: { id: venue.id } } : '/login')}>
+            <Text style={[muted, styles.center, styles.link]}>Vlasnik si ovog mesta? Preuzmi profil besplatno</Text>
+          </Pressable>
+        ))}
     </ScrollView>
+  );
+}
+
+function Info({ label, value, url }: { label: string; value: string; url?: string }) {
+  const colors = useColors();
+  return (
+    <Text style={{ color: colors.textSecondary }}>
+      {label}:{' '}
+      <Text style={[{ color: colors.text }, url && styles.link]} onPress={url ? () => Linking.openURL(url) : undefined}>
+        {value}
+      </Text>
+    </Text>
   );
 }
 
@@ -156,6 +219,10 @@ const styles = StyleSheet.create({
   title: { fontFamily: Fonts.display, fontSize: 24 },
   button: { padding: Spacing.three, borderRadius: 999, alignItems: 'center' },
   outline: { borderWidth: 2 },
+  row: { flexDirection: 'row', gap: Spacing.two },
+  half: { flex: 1 },
+  center: { textAlign: 'center' },
+  postType: { fontFamily: Fonts.bodyBold, fontSize: 11, letterSpacing: 1 },
   buttonText: { fontSize: 17, fontFamily: Fonts.bodyBold },
   paragraph: { fontSize: 16, lineHeight: 22 },
   sectionTitle: { fontSize: 18, fontFamily: Fonts.displayBold },

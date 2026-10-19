@@ -1,0 +1,33 @@
+# Pulls (from a box around the town) cafes, clubs, restaurants and stadiums in Pančevo from OpenStreetMap
+# into supabase/osm-venues.csv so the list can be reviewed before import.
+name: Mesta sa OpenStreetMap-a
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [claude/project-thread-sycmqs]
+    paths: [.github/workflows/osm-venues.yml, scripts/osm-venues.py]
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          curl -sSf --retry 3 -A "VibeIN/1.0 (https://github.com/djomlaxp/VibeIN)" https://overpass-api.de/api/interpreter --data-urlencode 'data=
+            [out:json][timeout:60];
+            (nwr["amenity"~"^(nightclub|bar|pub|cafe|restaurant|fast_food|events_venue|music_venue)$"](44.835,20.600,44.905,20.700);
+             nwr["leisure"="stadium"](44.835,20.600,44.905,20.700););
+            out center tags;' -o overpass.json
+          head -c 300 overpass.json; echo
+          python3 scripts/osm-venues.py overpass.json > supabase/osm-venues.csv
+          wc -l supabase/osm-venues.csv
+      - run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add supabase/osm-venues.csv
+          git diff --cached --quiet || git commit -m "Update Pančevo venues from OpenStreetMap"
+          git push
