@@ -83,6 +83,9 @@ export default function VenueList() {
         options={{
           headerRight: () => (
             <View style={styles.headerRight}>
+              <Link href="/map">
+                <Text style={{ color: colors.accent, fontFamily: Fonts.bodyBold }}>Mapa</Text>
+              </Link>
               {session && (
                 <Link href="/notifications">
                   <Text style={{ color: colors.text }}>🔔{unread > 0 ? ` ${unread}` : ''}</Text>
