@@ -34,7 +34,7 @@ select v.name, v.type::venue_type, st_setsrid(st_makepoint(v.lng, v.lat), 4326):
   ('Pikaso', 'cafe', 44.865040, 20.667044, null),
   ('Pivara Dilema', 'cafe', 44.881541, 20.639954, 'Sinđelićeva 58G, Pančevo'),
   ('Pod lipom', 'cafe', 44.868177, 20.644086, null),
-  ('Publica Pub', 'cafe', 44.871189, 20.642615, null),
+  ('Publika Pub', 'cafe', 44.871189, 20.642615, null),
   ('Slad Beer Shop & Tap', 'cafe', 44.868949, 20.638992, 'Nikole Tesle 11, Pančevo'),
   ('Sway', 'cafe', 44.872057, 20.649213, 'Oslobođenja 10A, Pančevo'),
   ('Tamiš 1926', 'cafe', 44.869367, 20.634798, null),

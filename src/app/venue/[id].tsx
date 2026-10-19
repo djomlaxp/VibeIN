@@ -187,6 +187,10 @@ export default function VenueScreen() {
             <Text style={[muted, styles.center, styles.link]}>Vlasnik si ovog mesta? Preuzmi profil besplatno</Text>
           </Pressable>
         ))}
+
+      <Pressable onPress={() => router.push(session ? { pathname: '/issue/[id]', params: { id: venue.id } } : '/login')}>
+        <Text style={[muted, styles.center, styles.link]}>Mesto je zatvoreno ili ima novo ime? Javi nam</Text>
+      </Pressable>
     </ScrollView>
   );
 }

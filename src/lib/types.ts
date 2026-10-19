@@ -68,3 +68,12 @@ export type VenueClaim = {
   created_at: string;
   venue: { name: string } | null;
 };
+
+export type VenueIssue = {
+  id: string;
+  venue_id: string;
+  kind: 'closed' | 'renamed';
+  new_name: string | null;
+  created_at: string;
+  venue: { name: string } | null;
+};

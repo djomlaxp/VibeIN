@@ -46,6 +46,7 @@ export default function RootLayout() {
           <Stack.Screen name="report/[id]" options={{ title: 'Prijavi atmosferu', presentation: 'modal' }} />
           <Stack.Screen name="map" options={{ title: 'Mapa' }} />
           <Stack.Screen name="claim/[id]" options={{ title: 'Preuzmi profil mesta', presentation: 'modal' }} />
+          <Stack.Screen name="issue/[id]" options={{ title: 'Javi promenu', presentation: 'modal' }} />
           <Stack.Screen name="edit/[id]" options={{ title: 'Uredi profil mesta' }} />
           <Stack.Screen name="post/[id]" options={{ title: 'Nova objava', presentation: 'modal' }} />
           <Stack.Screen name="admin" options={{ title: 'Admin' }} />
