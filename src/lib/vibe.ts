@@ -19,8 +19,8 @@ export const POST_TYPE_LABELS = { promo: 'Promocija', event: 'Najava', info: 'Ob
 
 export const CROWD_LABELS = ['Prazno', 'Umereno', 'Puno', 'Krcato'];
 
-// Music choices in an atmosphere report; the name is what gets saved (icons in src/components/icons.ts)
-export const MUSIC_GENRES = ['Elektronska', 'Pop', 'Narodna', 'Rok', 'Rep', 'Džez', 'Tamburaši', 'Svirka uživo', 'Bez muzike'];
+// Music choices in an atmosphere report; the name is what gets saved (icons in src/components/icons.tsx)
+export const MUSIC_GENRES = ['Pop', 'Džez', 'Klasična', 'Rok', 'Metal', 'Pank', 'Rege', 'Elektro', 'Narodna', 'Hip-hop', 'Kantri', 'Bluz', 'Bez muzike'];
 
 // Tile that lets the user type a genre that is not in the list
 export const OTHER_GENRE = 'Drugo';

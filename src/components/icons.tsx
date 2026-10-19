@@ -19,17 +19,26 @@ function lineIcon(source: ImageSourcePropType): IconComponent {
 }
 
 // Keys are the genre names saved in reports (MUSIC_GENRES in src/lib/vibe.ts)
+const electro = lineIcon(require('@/assets/genres/electro.png'));
+const hipHop = lineIcon(require('@/assets/genres/hiphop.png'));
 const GENRE_ICONS: Record<string, IconComponent> = {
-  Elektronska: lineIcon(require('@/assets/genres/electronic.png')),
   Pop: lineIcon(require('@/assets/genres/pop.png')),
-  Narodna: lineIcon(require('@/assets/genres/folk.png')),
-  Rok: lineIcon(require('@/assets/genres/rock.png')),
-  Rep: lineIcon(require('@/assets/genres/rap.png')),
   Džez: lineIcon(require('@/assets/genres/jazz.png')),
-  Tamburaši: lineIcon(require('@/assets/genres/tamburasi.png')),
-  'Svirka uživo': lineIcon(require('@/assets/genres/live.png')),
+  Klasična: lineIcon(require('@/assets/genres/classical.png')),
+  Rok: lineIcon(require('@/assets/genres/rock.png')),
+  Metal: lineIcon(require('@/assets/genres/metal.png')),
+  Pank: lineIcon(require('@/assets/genres/punk.png')),
+  Rege: lineIcon(require('@/assets/genres/reggae.png')),
+  Elektro: electro,
+  Narodna: lineIcon(require('@/assets/genres/folk.png')),
+  'Hip-hop': hipHop,
+  Kantri: lineIcon(require('@/assets/genres/country.png')),
+  Bluz: lineIcon(require('@/assets/genres/blues.png')),
   'Bez muzike': VolumeX,
   [OTHER_GENRE]: PenLine,
+  // Names used before the list changed, still found in older reports
+  Elektronska: electro,
+  Rep: hipHop,
 };
 
 // Genres people typed themselves get a plain note
