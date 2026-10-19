@@ -1,13 +1,15 @@
 import * as Location from 'expo-location';
 import { router, useLocalSearchParams } from 'expo-router';
+import { Video } from 'lucide-react-native';
 import { useState } from 'react';
 import { ActivityIndicator, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
+import { VIBE_ICONS, genreIcon } from '@/components/icons';
 import { VideoRecorder, type RecordedVideo } from '@/components/video-recorder';
 import { Colors, Fonts, Spacing, useColors } from '@/constants/theme';
 import { useAuth } from '@/lib/auth';
 import { VIDEO_BUCKET, supabase } from '@/lib/supabase';
-import { CROWD_LABELS, MAX_GENRE_LENGTH, MUSIC_GENRES, OTHER_GENRE, VIBE_EMOJI, VIBE_LABELS, errorMessage } from '@/lib/vibe';
+import { CROWD_LABELS, MAX_GENRE_LENGTH, MUSIC_GENRES, OTHER_GENRE, VIBE_LABELS, errorMessage } from '@/lib/vibe';
 
 export default function ReportScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -62,7 +64,7 @@ export default function ReportScreen() {
         p_lng: coords.longitude,
         p_vibe: vibe,
         p_crowd: crowd,
-        p_music_genre: genre === OTHER_GENRE[1] ? customGenre.trim() || null : genre,
+        p_music_genre: genre === OTHER_GENRE ? customGenre.trim() || null : genre,
         p_comment: null,
         p_video_path: videoPath,
         p_video_duration_s: video?.durationS ?? null,
@@ -86,9 +88,9 @@ export default function ReportScreen() {
     <ScrollView style={{ backgroundColor: colors.background }} contentContainerStyle={styles.content}>
       <Text style={[styles.label, text]}>Kakav je vibe?</Text>
       <View style={styles.vibes}>
-        {VIBE_EMOJI.map((e, i) => (
-          <Pressable key={e} style={[option(vibe === i + 1), styles.vibe]} onPress={() => setVibe(i + 1)}>
-            <Text style={styles.emoji}>{e}</Text>
+        {VIBE_ICONS.map((Icon, i) => (
+          <Pressable key={VIBE_LABELS[i]} style={[option(vibe === i + 1), styles.vibe]} onPress={() => setVibe(i + 1)}>
+            <Icon size={28} color={vibe === i + 1 ? colors.onAccent : colors.text} />
             <Text style={[optionText(vibe === i + 1), styles.vibeName]}>{VIBE_LABELS[i]}</Text>
           </Pressable>
         ))}
@@ -105,14 +107,17 @@ export default function ReportScreen() {
 
       <Text style={[styles.label, text]}>Muzika</Text>
       <View style={styles.genres}>
-        {[...MUSIC_GENRES, OTHER_GENRE].map(([icon, name]) => (
-          <Pressable key={name} style={[option(genre === name), styles.genre]} onPress={() => setGenre(genre === name ? null : name)}>
-            <Text style={styles.genreIcon}>{icon}</Text>
-            <Text style={[optionText(genre === name), styles.genreName]}>{name}</Text>
-          </Pressable>
-        ))}
+        {[...MUSIC_GENRES, OTHER_GENRE].map((name) => {
+          const Icon = genreIcon(name);
+          return (
+            <Pressable key={name} style={[option(genre === name), styles.genre]} onPress={() => setGenre(genre === name ? null : name)}>
+              <Icon size={26} color={genre === name ? colors.onAccent : colors.text} />
+              <Text style={[optionText(genre === name), styles.genreName]}>{name}</Text>
+            </Pressable>
+          );
+        })}
       </View>
-      {genre === OTHER_GENRE[1] && (
+      {genre === OTHER_GENRE && (
         <TextInput
           autoFocus
           value={customGenre}
@@ -125,7 +130,10 @@ export default function ReportScreen() {
       )}
 
       <Pressable style={[styles.option, { backgroundColor: colors.backgroundElement }]} onPress={() => (video ? setVideo(null) : setRecorderOpen(true))}>
-        <Text style={text}>{video ? `🎥 Snimak ${video.durationS}s (ukloni)` : '🎥 Snimi atmosferu (do 60 s)'}</Text>
+        <View style={styles.inline}>
+          <Video size={20} color={colors.text} />
+          <Text style={text}>{video ? `Snimak ${video.durationS}s (ukloni)` : 'Snimi atmosferu (do 60 s)'}</Text>
+        </View>
       </Pressable>
 
       {error && <Text style={styles.error}>{error}</Text>}
@@ -155,14 +163,13 @@ const styles = StyleSheet.create({
   label: { fontSize: 16, fontFamily: Fonts.displayBold },
   options: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two },
   option: { paddingHorizontal: 16, paddingVertical: 12, borderRadius: 12, alignItems: 'center' },
-  emoji: { fontSize: 26 },
+  inline: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   vibes: { flexDirection: 'row', gap: 6 },
   vibe: { flex: 1, paddingHorizontal: 2, gap: 4 },
   vibeName: { fontSize: 11, fontFamily: Fonts.bodyBold, textAlign: 'center' },
   input: { borderWidth: 1, borderRadius: 12, padding: 12, fontSize: 16, fontFamily: Fonts.body },
   genres: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two },
   genre: { width: '31%', paddingHorizontal: 4, gap: 4 },
-  genreIcon: { fontSize: 26 },
   genreName: { fontSize: 12, fontFamily: Fonts.bodyBold, textAlign: 'center' },
   error: { color: Colors.danger, fontSize: 15 },
   submit: { padding: Spacing.three, borderRadius: 999, alignItems: 'center' },

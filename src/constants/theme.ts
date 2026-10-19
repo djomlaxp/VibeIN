@@ -15,6 +15,9 @@ export const Colors = {
   danger: '#FF6B6B',
 } as const;
 
+// Ring around venues that are live right now (amber -> pink -> violet)
+export const LiveGradient = ['#FFB23E', '#FF4D8D', '#9B5CFF'] as const;
+
 export function useColors() {
   return Colors;
 }
