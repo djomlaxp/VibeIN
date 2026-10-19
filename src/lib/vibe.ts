@@ -32,12 +32,17 @@ export const MUSIC_GENRES: [string, string][] = [
   ['🔇', 'Bez muzike'],
 ];
 
+// Tile that lets the user type a genre that is not in the list
+export const OTHER_GENRE: [string, string] = ['✏️', 'Drugo'];
+export const MAX_GENRE_LENGTH = 30;
+
 export function musicLabel(genre: string) {
   const match = MUSIC_GENRES.find(([, name]) => name === genre);
-  return match ? `${match[0]} ${match[1]}` : genre;
+  return match ? `${match[0]} ${match[1]}` : `🎵 ${genre}`;
 }
 
 export const VIBE_EMOJI = ['😴', '😐', '🙂', '😄', '🔥'];
+export const VIBE_LABELS = ['Mrtvo', 'Mlako', 'Solidno', 'Dobra žurka', 'Gori!'];
 
 export function vibeColor(score: number | null) {
   if (score == null) return '#9BA1A6';
