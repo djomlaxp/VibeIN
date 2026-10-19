@@ -1,14 +1,17 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { Archive, AtSign, BadgeCheck, Clock, Flame, Globe, Navigation, Pencil, Phone, Plus, Trash2, Users, type LucideIcon } from 'lucide-react-native';
 import { useCallback, useState } from 'react';
 import { Alert, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { VibeBadge } from '@/components/vibe-badge';
+import { VIBE_ICONS, genreIcon, type IconComponent } from '@/components/icons';
+import { POST_ICONS, VenueAvatar } from '@/components/venue-avatar';
 import { VideoClip } from '@/components/video-clip';
-import { Fonts, Spacing, useColors } from '@/constants/theme';
+import { Fonts, LiveGradient, Spacing, useColors } from '@/constants/theme';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 import type { Post, Venue, VibeNow, VibeReport } from '@/lib/types';
-import { CROWD_LABELS, POST_TYPE_LABELS, musicLabel, VENUE_TYPE_LABELS, VIBE_EMOJI, errorMessage, timeAgo } from '@/lib/vibe';
+import { CROWD_LABELS, POST_TYPE_LABELS, VENUE_TYPE_LABELS, errorMessage, timeAgo, vibeColor } from '@/lib/vibe';
 
 // The reporter's GPS position (user_location) is not readable by clients, so
 // select('*') is refused; ask only for the columns the app is granted.
@@ -75,57 +78,57 @@ export default function VenueScreen() {
     <ScrollView style={{ backgroundColor: colors.background }} contentContainerStyle={styles.content}>
       <Stack.Screen options={{ title: '' }} />
 
-      <View style={[styles.header, { backgroundColor: colors.backgroundElement }]}>
-        <Text style={[styles.live, { color: colors.accent }]}>● UŽIVO{now?.last_report_at ? ` · ${timeAgo(now.last_report_at).toUpperCase()}` : ''}</Text>
-        <Text style={[styles.title, text]}>{venue.name}</Text>
-        <VibeBadge score={now?.vibe_score ?? null} crowd={now?.crowd} size="large" />
-        <View>
-          <Text style={muted}>{VENUE_TYPE_LABELS[venue.type]}{venue.address ? ` · ${venue.address}` : ''}</Text>
-          <Text style={muted}>
-            {now?.report_count ? `${now.report_count} prijava u poslednjih 90 min` : 'Nema svežih prijava'}
-          </Text>
+      <View style={styles.profile}>
+        <VenueAvatar type={venue.type} size={88} live={!!now?.report_count} />
+        <View style={styles.stats}>
+          <Stat value={now?.vibe_score == null ? '–' : Number(now.vibe_score).toFixed(1)} label="vibe sada" color={vibeColor(now?.vibe_score ?? null)} />
+          <Stat value={String(now?.report_count ?? 0)} label="prijava" color={colors.text} />
+          <Stat value={String(posts.length)} label={posts.length === 1 ? 'objava' : 'objave'} color={colors.text} />
         </View>
       </View>
 
-      {!isOwner && (
-        <Pressable
-          onPress={() => router.push(session ? { pathname: '/report/[id]', params: { id: venue.id } } : '/login')}
-          style={[styles.button, { backgroundColor: colors.accent }]}>
-          <Text style={[styles.buttonText, { color: colors.onAccent }]}>Prijavi atmosferu</Text>
-        </Pressable>
-      )}
-
-      <Pressable
-        onPress={() => Linking.openURL(`https://www.google.com/maps/dir/?api=1&destination=${venue.lat},${venue.lng}`)}
-        style={[styles.button, styles.outline, { borderColor: colors.backgroundSelected }]}>
-        <Text style={[styles.buttonText, text]}>Vodi me do mesta</Text>
-      </Pressable>
-
-      {isOwner && (
-        <View style={styles.row}>
-          <Pressable
-            onPress={() => router.push({ pathname: '/post/[id]', params: { id: venue.id } })}
-            style={[styles.button, styles.half, { backgroundColor: colors.accent }]}>
-            <Text style={[styles.buttonText, { color: colors.onAccent }]}>Nova objava</Text>
-          </Pressable>
-          <Pressable
-            onPress={() => router.push({ pathname: '/edit/[id]', params: { id: venue.id } })}
-            style={[styles.button, styles.half, styles.outline, { borderColor: colors.backgroundSelected }]}>
-            <Text style={[styles.buttonText, text]}>Uredi profil</Text>
-          </Pressable>
+      <View style={{ gap: Spacing.one }}>
+        <View style={styles.nameRow}>
+          <Text style={[styles.title, text]}>{venue.name}</Text>
+          {venue.verified && <BadgeCheck size={20} color={colors.accent} />}
         </View>
-      )}
+        <Text style={muted}>{VENUE_TYPE_LABELS[venue.type]}{venue.address ? ` · ${venue.address}` : ''}</Text>
+        {!!now?.report_count && (
+          <View style={styles.chips}>
+            <Chip icon={Flame} label={`Uživo · ${now.last_report_at ? timeAgo(now.last_report_at) : ''}`} color={colors.accent} />
+            {now.crowd != null && <Chip icon={Users} label={CROWD_LABELS[now.crowd]} color={colors.text} />}
+            {!!reports[0]?.music_genre && <Chip icon={genreIcon(reports[0].music_genre)} label={reports[0].music_genre} color={colors.text} />}
+          </View>
+        )}
+      </View>
+
+      <View style={styles.row}>
+        {isOwner ? (
+          <>
+            <Action icon={Plus} label="Nova objava" primary onPress={() => router.push({ pathname: '/post/[id]', params: { id: venue.id } })} />
+            <Action icon={Pencil} label="Uredi profil" onPress={() => router.push({ pathname: '/edit/[id]', params: { id: venue.id } })} />
+          </>
+        ) : (
+          <Action icon={Flame} label="Prijavi atmosferu" primary onPress={() => router.push(session ? { pathname: '/report/[id]', params: { id: venue.id } } : '/login')} />
+        )}
+        <Action
+          icon={Navigation}
+          label="Vodi me"
+          compact={isOwner}
+          onPress={() => Linking.openURL(`https://www.google.com/maps/dir/?api=1&destination=${venue.lat},${venue.lng}`)}
+        />
+      </View>
 
       {venue.description && <Text style={[text, styles.paragraph]}>{venue.description}</Text>}
 
       {!!(venue.opening_hours?.text || venue.contact?.phone || venue.contact?.instagram || venue.contact?.website) && (
         <View style={[styles.card, { backgroundColor: colors.backgroundElement }]}>
-          {!!venue.opening_hours?.text && <Info label="Radno vreme" value={venue.opening_hours.text} />}
-          {!!venue.contact?.phone && <Info label="Telefon" value={venue.contact.phone} url={`tel:${venue.contact.phone.replace(/\s/g, '')}`} />}
+          {!!venue.opening_hours?.text && <Info icon={Clock} value={venue.opening_hours.text} />}
+          {!!venue.contact?.phone && <Info icon={Phone} value={venue.contact.phone} url={`tel:${venue.contact.phone.replace(/\s/g, '')}`} />}
           {!!venue.contact?.instagram && (
-            <Info label="Instagram" value={venue.contact.instagram} url={`https://instagram.com/${venue.contact.instagram.replace(/^@/, '')}`} />
+            <Info icon={AtSign} value={venue.contact.instagram.replace(/^@/, '')} url={`https://instagram.com/${venue.contact.instagram.replace(/^@/, '')}`} />
           )}
-          {!!venue.contact?.website && <Info label="Sajt" value={venue.contact.website} url={venue.contact.website} />}
+          {!!venue.contact?.website && <Info icon={Globe} value={venue.contact.website} url={venue.contact.website} />}
         </View>
       )}
 
@@ -133,12 +136,13 @@ export default function VenueScreen() {
         <Section title="Promocije i najave" color={colors.text}>
           {posts.map((p) => (
             <View key={p.id} style={[styles.card, { backgroundColor: colors.backgroundElement }]}>
-              <Text style={[styles.postType, muted]}>{POST_TYPE_LABELS[p.type].toUpperCase()}</Text>
+              <PostLabel type={p.type} />
               <Text style={[styles.cardTitle, { color: colors.accentWarm }]}>{p.title}</Text>
               {p.body && <Text style={muted}>{p.body}</Text>}
               {isOwner && (
-                <Pressable onPress={() => deletePost(p)}>
-                  <Text style={[styles.link, text]}>Obriši objavu</Text>
+                <Pressable onPress={() => deletePost(p)} style={styles.inline}>
+                  <Trash2 size={16} color={colors.textSecondary} />
+                  <Text style={[styles.link, muted]}>Obriši objavu</Text>
                 </Pressable>
               )}
             </View>
@@ -150,14 +154,12 @@ export default function VenueScreen() {
         {reports.length === 0 && <Text style={muted}>Još niko nije prijavio atmosferu u poslednja 3 sata.</Text>}
         {reports.map((r) => (
           <View key={r.id} style={[styles.card, { backgroundColor: colors.backgroundElement }]}>
-            <Text style={text}>
-              {VIBE_EMOJI[r.vibe - 1]} {CROWD_LABELS[r.crowd]}{r.music_genre ? ` · ${musicLabel(r.music_genre)}` : ''}
-              <Text style={muted}>  {timeAgo(r.created_at)}</Text>
-            </Text>
+            <ReportLine report={r} />
             {r.video_path && <VideoClip path={r.video_path} />}
             {isOwner && r.video_path && !r.archive_withdrawn && (
-              <Pressable onPress={() => toggleArchive(r)}>
-                <Text style={[styles.link, text]}>{r.archived ? 'Ukloni iz arhive' : 'Arhiviraj na profilu'}</Text>
+              <Pressable onPress={() => toggleArchive(r)} style={styles.inline}>
+                <Archive size={16} color={colors.textSecondary} />
+                <Text style={[styles.link, muted]}>{r.archived ? 'Ukloni iz arhive' : 'Arhiviraj na profilu'}</Text>
               </Pressable>
             )}
           </View>
@@ -195,15 +197,88 @@ export default function VenueScreen() {
   );
 }
 
-function Info({ label, value, url }: { label: string; value: string; url?: string }) {
+function Info({ icon: Icon, value, url }: { icon: LucideIcon; value: string; url?: string }) {
   const colors = useColors();
   return (
-    <Text style={{ color: colors.textSecondary }}>
-      {label}:{' '}
-      <Text style={[{ color: colors.text }, url && styles.link]} onPress={url ? () => Linking.openURL(url) : undefined}>
+    <View style={styles.inline}>
+      <Icon size={18} color={colors.textSecondary} />
+      <Text style={[{ color: colors.text, flex: 1 }, url && styles.link]} onPress={url ? () => Linking.openURL(url) : undefined}>
         {value}
       </Text>
-    </Text>
+    </View>
+  );
+}
+
+function ReportLine({ report: r }: { report: VibeReport }) {
+  const colors = useColors();
+  const VibeIcon = VIBE_ICONS[r.vibe - 1];
+  const GenreIcon = r.music_genre ? genreIcon(r.music_genre) : null;
+  const text = { color: colors.text };
+  return (
+    <View style={[styles.inline, { flexWrap: 'wrap' }]}>
+      <VibeIcon size={18} color={vibeColor(r.vibe)} />
+      <Text style={text}>{CROWD_LABELS[r.crowd]}</Text>
+      {GenreIcon && (
+        <>
+          <GenreIcon size={16} color={colors.textSecondary} />
+          <Text style={text}>{r.music_genre}</Text>
+        </>
+      )}
+      <Text style={{ color: colors.textSecondary }}>{timeAgo(r.created_at)}</Text>
+    </View>
+  );
+}
+
+function Stat({ value, label, color }: { value: string; label: string; color: string }) {
+  const colors = useColors();
+  return (
+    <View style={{ alignItems: 'center' }}>
+      <Text style={[styles.statValue, { color }]}>{value}</Text>
+      <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{label}</Text>
+    </View>
+  );
+}
+
+function Chip({ icon: Icon, label, color }: { icon: IconComponent; label: string; color: string }) {
+  const colors = useColors();
+  return (
+    <View style={[styles.chip, { backgroundColor: colors.backgroundElement }]}>
+      <Icon size={14} color={color} />
+      <Text style={[styles.chipText, { color }]}>{label}</Text>
+    </View>
+  );
+}
+
+function PostLabel({ type }: { type: Post['type'] }) {
+  const colors = useColors();
+  const Icon = POST_ICONS[type];
+  return (
+    <View style={styles.inline}>
+      <Icon size={14} color={colors.textSecondary} />
+      <Text style={[styles.postType, { color: colors.textSecondary }]}>{POST_TYPE_LABELS[type].toUpperCase()}</Text>
+    </View>
+  );
+}
+
+// Profile buttons; the main one carries the live gradient
+function Action({ icon: Icon, label, onPress, primary, compact }: { icon: LucideIcon; label: string; onPress: () => void; primary?: boolean; compact?: boolean }) {
+  const colors = useColors();
+  const body = (
+    <>
+      <Icon size={18} color={primary ? colors.onAccent : colors.text} />
+      {!compact && <Text style={[styles.actionText, { color: primary ? colors.onAccent : colors.text }]}>{label}</Text>}
+    </>
+  );
+  return (
+    <Pressable onPress={onPress} aria-label={label} style={[styles.actionWrap, primary ? { flex: 2 } : compact ? { flex: 0 } : { flex: 1 }]}>
+      {primary ? (
+        <LinearGradient colors={LiveGradient} start={{ x: 0, y: 1 }} end={{ x: 1, y: 0 }} style={styles.action}>
+          {body}
+        </LinearGradient>
+      ) : (
+        <View style={[styles.action, { backgroundColor: colors.backgroundElement }, compact && { paddingHorizontal: 16 }]}>{body}</View>
+      )}
+    </Pressable>
   );
 }
 
@@ -218,16 +293,22 @@ function Section({ title, color, children }: { title: string; color: string; chi
 
 const styles = StyleSheet.create({
   content: { padding: Spacing.three, gap: Spacing.four, maxWidth: 800, width: '100%', alignSelf: 'center' },
-  header: { gap: Spacing.three, padding: Spacing.three, borderRadius: 20 },
-  live: { fontFamily: Fonts.bodyBold, fontSize: 12, letterSpacing: 1 },
-  title: { fontFamily: Fonts.display, fontSize: 24 },
-  button: { padding: Spacing.three, borderRadius: 999, alignItems: 'center' },
-  outline: { borderWidth: 2 },
+  profile: { flexDirection: 'row', alignItems: 'center', gap: Spacing.four },
+  stats: { flex: 1, flexDirection: 'row', justifyContent: 'space-around' },
+  statValue: { fontFamily: Fonts.display, fontSize: 20 },
+  statLabel: { fontFamily: Fonts.body, fontSize: 12 },
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
+  title: { fontFamily: Fonts.display, fontSize: 22 },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two, marginTop: Spacing.two },
+  chip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999 },
+  chipText: { fontFamily: Fonts.bodyBold, fontSize: 13 },
   row: { flexDirection: 'row', gap: Spacing.two },
-  half: { flex: 1 },
+  actionWrap: { borderRadius: 12, overflow: 'hidden' },
+  action: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.two, paddingVertical: 12, borderRadius: 12 },
+  actionText: { fontFamily: Fonts.bodyBold, fontSize: 15 },
+  inline: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
   center: { textAlign: 'center' },
   postType: { fontFamily: Fonts.bodyBold, fontSize: 11, letterSpacing: 1 },
-  buttonText: { fontSize: 17, fontFamily: Fonts.bodyBold },
   paragraph: { fontSize: 16, lineHeight: 22 },
   sectionTitle: { fontSize: 18, fontFamily: Fonts.displayBold },
   card: { padding: Spacing.three, borderRadius: 16, gap: Spacing.two },

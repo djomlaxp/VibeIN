@@ -38,10 +38,12 @@ export type VibeReport = {
   created_at: string;
 };
 
+export type PostType = 'promo' | 'event' | 'info';
+
 export type Post = {
   id: string;
   venue_id: string;
-  type: 'promo' | 'event' | 'info';
+  type: PostType;
   title: string;
   body: string | null;
   valid_to: string | null;

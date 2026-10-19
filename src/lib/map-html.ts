@@ -17,7 +17,7 @@ html,body,#map{height:100%;margin:0;background:${Colors.background}}
 .pin{display:flex;align-items:center;justify-content:center;border-radius:50%;border:3px solid;background:${Colors.backgroundElement};color:${Colors.text};font:700 12px system-ui,sans-serif}
 .leaflet-tooltip{background:${Colors.backgroundElement};color:${Colors.text};border:0;font:600 13px system-ui,sans-serif}
 .leaflet-tooltip:before{display:none}
-.leaflet-control-attribution{background:#140F24cc!important;color:${Colors.textSecondary}}
+.leaflet-control-attribution{background:#0C1210cc!important;color:${Colors.textSecondary}}
 .leaflet-control-attribution a{color:${Colors.textSecondary}}
 </style></head><body><div id="map"></div><script>
 var markers=${JSON.stringify(markers)};

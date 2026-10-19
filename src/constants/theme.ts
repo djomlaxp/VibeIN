@@ -1,19 +1,22 @@
 /**
- * The "Noć" (night) look: one dark palette for the whole app, like a club after
- * midnight. Vibe score colors stay in src/lib/vibe.ts.
+ * The "Neon limeta" look: one dark palette for the whole app, dark green-black
+ * with a lime accent. Vibe score colors stay in src/lib/vibe.ts.
  */
 
 export const Colors = {
-  text: '#F3EEFF',
-  textSecondary: '#B7A9D6',
-  background: '#140F24',
-  backgroundElement: '#211A36',
-  backgroundSelected: '#2E2548',
-  accent: '#FF4D8D',
-  accentWarm: '#FFB23E',
-  onAccent: '#FFFFFF',
+  text: '#EEF5EC',
+  textSecondary: '#9DB0A3',
+  background: '#0C1210',
+  backgroundElement: '#16201C',
+  backgroundSelected: '#22302A',
+  accent: '#C6FF3D',
+  accentWarm: '#FFD84D',
+  onAccent: '#0C1210',
   danger: '#FF6B6B',
 } as const;
+
+// Ring around venues that are live right now (lime -> mint -> cyan)
+export const LiveGradient = ['#C6FF3D', '#5CF2B0', '#2FD3E0'] as const;
 
 export function useColors() {
   return Colors;
