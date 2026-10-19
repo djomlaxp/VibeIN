@@ -66,6 +66,8 @@ const ERROR_MESSAGES: Record<string, string> = {
   venue_claims_one_pending: 'Već si poslao zahtev za ovo mesto. Javićemo ti kad ga pregledamo.',
   not_admin: 'Ovo može samo administrator.',
   claim_not_pending: 'Ovaj zahtev je već pregledan.',
+  venue_issues_one_open: 'Već si nam javio za ovo mesto. Proverićemo uskoro.',
+  issue_not_open: 'Ova prijava je već pregledana.',
   'row-level security': 'Nemaš dozvolu za ovu izmenu.',
 };
 
