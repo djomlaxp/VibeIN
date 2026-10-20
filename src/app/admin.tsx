@@ -6,7 +6,7 @@ import { AdminStats } from '@/components/admin-stats';
 import { formStyles } from '@/components/form';
 import { WelcomeClipsAdmin } from '@/components/welcome-clips-admin';
 import { Fonts, Spacing, useColors } from '@/constants/theme';
-import { CLAIM_METHODS, claimLinkUrl, hasSecretCode } from '@/lib/claims';
+import { claimLinkUrl, claimMethodInfo, hasSecretCode } from '@/lib/claims';
 import { CLAIM_DOCS_BUCKET, supabase } from '@/lib/supabase';
 import type { VenueClaim, VenueIssue } from '@/lib/types';
 import { errorMessage, timeAgo } from '@/lib/vibe';
@@ -101,16 +101,18 @@ export default function AdminScreen() {
               </Text>
               {item.method && (
                 <>
-                  <Text style={[styles.method, { color: colors.accent }]}>{CLAIM_METHODS[item.method].label}</Text>
+                  <Text style={[styles.method, { color: colors.accent }]}>{claimMethodInfo(item.method)?.label ?? item.method}</Text>
                   {item.venue_link && (
                     <Pressable
                       disabled={!claimLinkUrl(item.method, item.venue_link)}
                       onPress={() => Linking.openURL(claimLinkUrl(item.method, item.venue_link)!)}>
-                      <Text style={[text, styles.link]}>{item.venue_link}</Text>
+                      <Text style={[text, claimLinkUrl(item.method, item.venue_link) && styles.link]}>{item.venue_link}</Text>
                     </Pressable>
                   )}
-                  <Text style={text}>{CLAIM_METHODS[item.method].check(item.secret_code)}</Text>
-                  {item.code && <Text style={[styles.code, text]}>Kod: {item.code}</Text>}
+                  {claimMethodInfo(item.method) && (
+                    <Text style={text}>{claimMethodInfo(item.method)!.check(item.secret_code, item.venue_link)}</Text>
+                  )}
+                  {(item.secret_code ?? item.code) && <Text style={[styles.code, text]}>Kod: {item.secret_code ?? item.code}</Text>}
                   {hasSecretCode(item.method) && (
                     <Text style={{ color: item.secret_confirmed ? colors.accent : colors.textSecondary }}>
                       {item.secret_confirmed
@@ -132,7 +134,7 @@ export default function AdminScreen() {
                   'nema kontakta'}
               </Text>
               <Actions
-                yes="Odobri"
+                yes={item.method === 'express' ? 'Uplata stigla, odobri' : 'Odobri'}
                 no="Odbij"
                 onYes={() =>
                   run('review_venue_claim', {

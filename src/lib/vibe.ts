@@ -53,6 +53,8 @@ const ERROR_MESSAGES: Record<string, string> = {
   venue_has_owner: 'Ovo mesto već ima vlasnika.',
   document_missing: 'Dodaj sliku ili PDF dokumenta.',
   venue_link_missing: 'Upiši podatak o mestu koji tražimo.',
+  email_not_business: 'Treba nam imejl sa domena lokala (na primer info@imelokala.rs), ne Gmail ili slična adresa.',
+  invalid_method: 'Izaberi jedan od ponuđenih načina.',
   too_many_attempts: 'Previše pogrešnih pokušaja. Javi nam se da proverimo zahtev.',
   venue_issues_one_open: 'Već si nam javio za ovo mesto. Proverićemo uskoro.',
   issue_not_open: 'Ova prijava je već pregledana.',

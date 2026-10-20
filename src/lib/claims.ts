@@ -1,77 +1,83 @@
-// Ways to prove you own a venue (see create_venue_claim in the database).
-// Public-code methods: the owner shows the code where only they can put it.
-// Secret-code methods: the admin sends the code to the venue's public phone or
-// email, and the owner types it in the app.
-export type ClaimMethod = 'instagram' | 'facebook' | 'website' | 'phone' | 'email' | 'document' | 'visit';
+// Ways to prove you own a venue (see create_venue_claim in the database). For
+// phone and email the admin sends a secret code to the venue itself and the
+// owner types it in the app; for Instagram and Facebook the owner sends us the
+// code we show them from the venue's profile; a document is checked by the
+// admin; express skips the proof and waits for the membership payment.
+export type ClaimMethod = 'phone' | 'email' | 'instagram' | 'facebook' | 'document' | 'express';
+
+// VibeIN's own profiles, where owners send their code in a private message
+export const VIBEIN_INSTAGRAM = '@vibein.app';
+export const VIBEIN_FACEBOOK = 'VibeIN';
 
 type MethodInfo = {
   label: string;
-  // What we ask for about the venue, if anything
-  link?: { label: string; placeholder: string };
-  // Shown to the claimant after sending
-  howTo: (code: string | null, link: string | null) => string;
+  // Shown before sending
+  hint: string;
+  // Shown to the claimant while the request waits
+  howTo: (link: string | null) => string;
   // Shown to the admin
-  check: (secretCode: string | null) => string;
+  check: (secretCode: string | null, link: string | null) => string;
 };
 
 export const CLAIM_METHODS: Record<ClaimMethod, MethodInfo> = {
-  instagram: {
-    label: 'Instagram lokala',
-    link: { label: 'Instagram profil lokala', placeholder: '@imelokala' },
-    howTo: (code) =>
-      `Stavi kod ${code} u opis (bio) Instagram profila lokala ili ga objavi u story. Kad odobrimo zahtev, kod možeš da skloniš.`,
-    check: () => 'Otvori profil i nađi kod u opisu ili u story-ju. Proveri da je to zaista profil ovog lokala.',
-  },
-  facebook: {
-    label: 'Facebook stranica',
-    link: { label: 'Link do Facebook stranice lokala', placeholder: 'facebook.com/imelokala' },
-    howTo: (code) =>
-      `Objavi kod ${code} na Facebook stranici lokala ili ga stavi u opis stranice. Kad odobrimo zahtev, možeš da ga skloniš.`,
-    check: () => 'Otvori stranicu i nađi kod u objavi ili opisu. Proveri da je to zaista stranica ovog lokala.',
-  },
-  website: {
-    label: 'Sajt lokala',
-    link: { label: 'Adresa sajta lokala', placeholder: 'www.imelokala.rs' },
-    howTo: (code) => `Stavi kod ${code} bilo gde na početnu stranu sajta lokala. Kad odobrimo zahtev, možeš da ga skloniš.`,
-    check: () => 'Otvori sajt i nađi kod na početnoj strani.',
-  },
   phone: {
-    label: 'Telefon lokala',
-    link: { label: 'Javni broj telefona lokala', placeholder: 'Broj sa Google-a, menija ili ulaza' },
-    howTo: (_, link) => `Pozvaćemo lokal na ${link} i reći kod osobi koja se javi. Kad ti prenesu kod, upiši ga ovde.`,
-    check: (secret) =>
-      `Pozovi javni broj lokala i reci kod ${secret}. Ako se broj koji je poslao korisnik ne slaže sa brojem lokala, pozovi broj lokala.`,
+    label: 'Poziv na broj lokala',
+    hint: 'Pozvaćemo broj lokala i reći kod osobi koja se javi. Ti ga posle upišeš ovde. Najbrži način.',
+    howTo: (link) => `Pozvaćemo lokal na ${link} i reći kod. Kad ti ga prenesu, upiši ga ovde.`,
+    check: (secret, link) =>
+      `Pozovi ${link} i reci kod ${secret}. Proveri da je to zaista broj ovog lokala (Google, meni, tabla na ulazu).`,
   },
   email: {
     label: 'Imejl lokala',
-    link: { label: 'Zvanični imejl lokala', placeholder: 'info@imelokala.rs' },
-    howTo: (_, link) => `Poslaćemo kod na ${link}. Kad stigne, upiši ga ovde.`,
-    check: (secret) => `Pošalji kod ${secret} na zvanični imejl lokala i sačekaj da ga vlasnik upiše.`,
+    hint: 'Poslaćemo kod na imejl sa domena lokala, na primer info@imelokala.rs. Gmail, Yahoo i slične adrese ne važe.',
+    howTo: (link) => `Poslaćemo kod na ${link}. Kad stigne, upiši ga ovde.`,
+    check: (secret, link) => `Pošalji kod ${secret} na ${link}. Proveri da je domen adrese isti kao sajt lokala.`,
+  },
+  instagram: {
+    label: 'Poruka sa Instagrama',
+    hint: `Dobićeš kod koji pošalješ privatnom porukom sa Instagram profila lokala na ${VIBEIN_INSTAGRAM}.`,
+    howTo: (link) => `Pošalji ovaj kod privatnom porukom sa profila ${link} na ${VIBEIN_INSTAGRAM}.`,
+    check: (_, link) =>
+      `U porukama na ${VIBEIN_INSTAGRAM} nađi ovaj kod. Mora da stigne sa ${link}, a proveri i da je to zaista profil ovog lokala.`,
+  },
+  facebook: {
+    label: 'Poruka sa Facebooka',
+    hint: `Dobićeš kod koji pošalješ porukom sa Facebook stranice lokala na stranicu ${VIBEIN_FACEBOOK}.`,
+    howTo: (link) => `Pošalji ovaj kod porukom sa stranice ${link} na Facebook stranicu ${VIBEIN_FACEBOOK}.`,
+    check: (_, link) =>
+      `U porukama Facebook stranice ${VIBEIN_FACEBOOK} nađi ovaj kod. Mora da stigne sa ${link}, a proveri i da je to zaista stranica ovog lokala.`,
   },
   document: {
     label: 'Dokument',
+    hint: 'Pošalji sliku ili PDF rešenja iz APR-a, ugovora o zakupu ili računa za struju na ime lokala ili firme. Vidi ga samo administrator.',
     howTo: () => 'Dobili smo dokument. Proverićemo ga i javiti ti čim odobrimo zahtev.',
     check: () => 'Otvori dokument i proveri da se ime firme i adresa slažu sa lokalom.',
   },
-  visit: {
-    label: 'Lična poseta',
-    howTo: (code) => `Doći ćemo u lokal. Kada dođemo, pokaži nam kod ${code} u aplikaciji.`,
-    check: () => 'Idi u lokal i traži da ti vlasnik pokaže ovaj kod u aplikaciji.',
+  express: {
+    label: 'Ekspresno, uz članarinu',
+    hint: 'Bez provere: lokal postaje tvoj čim uplatiš članarinu. Nema besplatnog probnog perioda.',
+    howTo: () =>
+      'Javićemo ti se na imejl sa podacima za uplatu članarine. Čim uplata stigne, lokal je tvoj. Nema besplatnog probnog perioda.',
+    check: () => 'Ekspresno preuzimanje: pošalji podatke za uplatu na imejl korisnika i odobri čim članarina stigne.',
   },
 };
 
-export function hasSecretCode(method: ClaimMethod | null) {
+// Older requests may carry a way of proving that is no longer offered
+export function claimMethodInfo(method: string | null): MethodInfo | null {
+  return method && method in CLAIM_METHODS ? CLAIM_METHODS[method as ClaimMethod] : null;
+}
+
+export function hasSecretCode(method: string | null) {
   return method === 'phone' || method === 'email';
 }
 
-// Turns what the claimant typed into a link the admin can open.
-export function claimLinkUrl(method: ClaimMethod | null, link: string | null) {
+// A link the admin can tap to call, write to or open the venue's profile.
+export function claimLinkUrl(method: string | null, link: string | null) {
   if (!link) return null;
   const value = link.trim();
   if (method === 'instagram' && !value.includes('/')) return `https://instagram.com/${value.replace(/^@/, '')}`;
-  if (method === 'facebook' || method === 'website' || method === 'instagram')
-    return /^https?:\/\//.test(value) ? value : `https://${value}`;
-  if (method === 'phone') return `tel:${value.replace(/[^\d+]/g, '')}`;
-  if (method === 'email') return `mailto:${value}`;
+  if (method === 'instagram' || method === 'facebook') return /^https?:\/\//.test(value) ? value : `https://${value}`;
+  if (method === 'phone') return `tel:${link.replace(/[^\d+]/g, '')}`;
+  if (method === 'email') return `mailto:${link.trim()}`;
   return null;
 }
