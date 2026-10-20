@@ -10,15 +10,17 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import type { IconComponent } from '@/components/icons';
 import { Logo } from '@/components/logo';
 import { Pill } from '@/components/pill';
+import { StrobeLights } from '@/components/strobe-lights';
 import { VenueAvatar } from '@/components/venue-avatar';
 import { Colors, Fonts, Spacing } from '@/constants/theme';
 import { useCity } from '@/lib/city';
-import type { Venue, VenueType } from '@/lib/types';
+import { supabase, welcomeClipUrl } from '@/lib/supabase';
+import type { Venue, VenueType, WelcomeClip } from '@/lib/types';
 import { CITY, CROWD_LABELS, VENUE_TYPE_LABELS, VIBE_LABELS, distanceMeters, formatDistance, timeAgo, vibeColor } from '@/lib/vibe';
 
 // Made-up looping example clips (animations, not real people or places) so a
 // new visitor sees what the app looks like before making a profile.
-type Example = { video: number; poster: number; label: string; score: number; crowd: number; minutes: number; length: string };
+type Example = { video: number | string; poster?: number; label: string; score: number; crowd: number; minutes: number; length: string };
 const EXAMPLES: Example[] = [
   { video: require('@/assets/welcome/club.mp4'), poster: require('@/assets/welcome/club.jpg'), label: 'Klub', score: 4.8, crowd: 3, minutes: 2, length: '0:24' },
   { video: require('@/assets/welcome/cafe.mp4'), poster: require('@/assets/welcome/cafe.jpg'), label: 'Kafić', score: 4.6, crowd: 2, minutes: 5, length: '0:41' },
@@ -48,6 +50,7 @@ export default function Welcome() {
   return (
     <SafeAreaView style={styles.screen}>
       <View style={styles.column} onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
+        <StrobeLights />
         {width > 0 && (
           <ScrollView
             ref={scroller}
@@ -58,7 +61,7 @@ export default function Welcome() {
             onScroll={(e) => setPage(Math.round(e.nativeEvent.contentOffset.x / width))}
             style={{ flex: 1 }}>
             <ScrollView style={{ width }} contentContainerStyle={styles.slide} showsVerticalScrollIndicator={false}>
-              <LiveNow width={width} />
+              <LiveNow />
             </ScrollView>
             <ScrollView style={{ width }} contentContainerStyle={styles.slide} showsVerticalScrollIndicator={false}>
               <WhatYouGet />
@@ -95,14 +98,13 @@ const hottestFirst = (venues: Venue[], vibes: ReturnType<typeof useCity>['vibes'
 
 // Page 1: the places that are live right now, straight from the database,
 // over a soft club light.
-function LiveNow({ width }: { width: number }) {
+function LiveNow() {
   const { venues, vibes } = useCity();
   const live = useMemo(() => hottestFirst(venues, vibes), [venues, vibes]);
   const shown = (live.length ? live : venues).slice(0, 4);
 
   return (
     <View style={{ flex: 1 }}>
-      <Image source={require('@/assets/welcome/hero.jpg')} style={[styles.hero, { width, height: Math.round((width * 640) / 420) }]} contentFit="cover" />
       <Logo />
       <View style={styles.stories}>
         {shown.map((v) => {
@@ -208,7 +210,7 @@ function Examples({ width, active }: { width: number; active: boolean }) {
   const bigWidth = Math.floor((inner - gap) * 0.6);
   const smallWidth = inner - gap - bigWidth;
   const smallHeight = Math.round(smallWidth * 1.33);
-  const [big, ...small] = EXAMPLES;
+  const [big, ...small] = useWelcomeClips();
   return (
     <View style={{ flex: 1 }}>
       <Text style={[styles.headline, styles.headlineSmall, { marginTop: 0 }]}>
@@ -216,16 +218,32 @@ function Examples({ width, active }: { width: number; active: boolean }) {
       </Text>
       <Text style={[styles.body, { marginTop: Spacing.two }]}>Ljudi koji su na licu mesta šalju kratke snimke, do 60 sekundi.</Text>
       <View style={{ flexDirection: 'row', gap, marginTop: Spacing.three }}>
-        <ExampleClip example={big} width={bigWidth} height={smallHeight * 2 + gap} active={active} big />
+        <ExampleClip key={String(big.video)} example={big} width={bigWidth} height={smallHeight * 2 + gap} active={active} big />
         <View style={{ gap }}>
           {small.map((e) => (
-            <ExampleClip key={e.label} example={e} width={smallWidth} height={smallHeight} active={active} />
+            <ExampleClip key={String(e.video)} example={e} width={smallWidth} height={smallHeight} active={active} />
           ))}
         </View>
       </View>
       <Text style={styles.note}>Ovo su primeri. Pravi snimci iz Pančeva te čekaju unutra.</Text>
     </View>
   );
+}
+
+// The admin can swap any of the three animations for a real clip (see the
+// admin screen); slots without one keep the built-in animation.
+function useWelcomeClips() {
+  const [clips, setClips] = useState<WelcomeClip[]>([]);
+  useEffect(() => {
+    supabase
+      .from('welcome_clips')
+      .select('slot, video_path, label')
+      .then(({ data }) => setClips(data ?? []));
+  }, []);
+  return EXAMPLES.map((example, i) => {
+    const clip = clips.find((c) => c.slot === i + 1);
+    return clip ? { ...example, video: welcomeClipUrl(clip.video_path), poster: undefined, label: clip.label || example.label } : example;
+  });
 }
 
 function ExampleClip({ example: e, width, height, active, big }: { example: Example; width: number; height: number; active: boolean; big?: boolean }) {
@@ -240,7 +258,7 @@ function ExampleClip({ example: e, width, height, active, big }: { example: Exam
 
   return (
     <View style={[styles.tile, { width, height }]}>
-      <Image source={e.poster} style={StyleSheet.absoluteFill} contentFit="cover" />
+      {e.poster && <Image source={e.poster} style={StyleSheet.absoluteFill} contentFit="cover" />}
       <VideoView player={player} style={styles.video} contentFit="cover" nativeControls={false} />
       <LinearGradient colors={['transparent', 'rgba(12,18,16,0.9)']} style={styles.tileShade} />
       {big && (
@@ -272,7 +290,6 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: Colors.background, alignItems: 'center' },
   column: { flex: 1, width: '100%', maxWidth: 520, overflow: 'hidden' },
   slide: { flexGrow: 1, paddingHorizontal: Spacing.four, paddingTop: Spacing.four, overflow: 'hidden' },
-  hero: { position: 'absolute', top: -Spacing.four, left: -Spacing.four },
   stories: { flexDirection: 'row', justifyContent: 'space-between', marginTop: Spacing.five, maxWidth: 360 },
   story: { width: 74, alignItems: 'center' },
   scoreChip: { marginTop: -10, borderRadius: 6, borderWidth: 2, borderColor: Colors.background, paddingHorizontal: 5 },

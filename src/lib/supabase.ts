@@ -27,3 +27,10 @@ export const VIDEO_BUCKET = 'vibe-videos';
 export function videoUrl(path: string) {
   return supabase.storage.from(VIDEO_BUCKET).getPublicUrl(path).data.publicUrl;
 }
+
+// Clips the admin put on the welcome screen in place of the example animations
+export const WELCOME_BUCKET = 'welcome';
+
+export function welcomeClipUrl(path: string) {
+  return supabase.storage.from(WELCOME_BUCKET).getPublicUrl(path).data.publicUrl;
+}

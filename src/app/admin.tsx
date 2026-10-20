@@ -3,12 +3,14 @@ import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { formStyles } from '@/components/form';
+import { WelcomeClipsAdmin } from '@/components/welcome-clips-admin';
 import { Fonts, Spacing, useColors } from '@/constants/theme';
 import { supabase } from '@/lib/supabase';
 import type { VenueClaim, VenueIssue } from '@/lib/types';
 import { errorMessage, timeAgo } from '@/lib/vibe';
 
-// Admin: approve requests to manage a venue, and act on reports that a venue closed or was renamed.
+// Admin: approve requests to manage a venue, act on reports that a venue closed
+// or was renamed, and choose the clips on the welcome screen.
 export default function AdminScreen() {
   const colors = useColors();
   const [claims, setClaims] = useState<VenueClaim[]>([]);
@@ -101,6 +103,8 @@ export default function AdminScreen() {
           />
         </View>
       ))}
+
+      <WelcomeClipsAdmin />
     </ScrollView>
   );
 }
