@@ -79,3 +79,8 @@ export function distanceMeters(a: { lat: number; lng: number }, b: { lat: number
 export function formatDistance(m: number) {
   return m < 1000 ? `${Math.round(m)} m` : `${(m / 1000).toFixed(1)} km`;
 }
+
+// Nearest first when we know where the person is, otherwise alphabetical.
+export function byDistance<T extends { name: string; lat: number; lng: number }>(position: { lat: number; lng: number } | null) {
+  return (a: T, b: T) => (position ? distanceMeters(position, a) - distanceMeters(position, b) : 0) || a.name.localeCompare(b.name);
+}

@@ -16,7 +16,7 @@ import { useCity } from '@/lib/city';
 import { latestClip, latestGenre, latestPost } from '@/lib/feed';
 import { supabase } from '@/lib/supabase';
 import type { Venue, VenueType } from '@/lib/types';
-import { CITY, CROWD_LABELS, VENUE_TYPE_LABELS, VIBE_LABELS, distanceMeters, formatDistance, timeAgo, vibeColor } from '@/lib/vibe';
+import { CITY, CROWD_LABELS, VENUE_TYPE_LABELS, VIBE_LABELS, byDistance, distanceMeters, formatDistance, timeAgo, vibeColor } from '@/lib/vibe';
 
 const openVenue = (id: string) => router.push({ pathname: '/venue/[id]', params: { id } });
 
@@ -50,8 +50,8 @@ export default function Home() {
     [venues, vibes],
   );
   const rest = useMemo(
-    () => venues.filter((v) => !vibes[v.id]?.report_count && (!filter || v.type === filter)).sort((a, b) => a.name.localeCompare(b.name)),
-    [venues, vibes, filter],
+    () => venues.filter((v) => !vibes[v.id]?.report_count && (!filter || v.type === filter)).sort(byDistance(position)),
+    [venues, vibes, filter, position],
   );
 
   const distance = (v: Venue) => (position ? formatDistance(distanceMeters(position, v)) : null);

@@ -8,17 +8,17 @@ import { VibeBadge } from '@/components/vibe-badge';
 import { Fonts, Spacing, useColors } from '@/constants/theme';
 import { useAuth } from '@/lib/auth';
 import { useCity } from '@/lib/city';
-import { VENUE_TYPE_LABELS, timeAgo } from '@/lib/vibe';
+import { VENUE_TYPE_LABELS, byDistance, distanceMeters, formatDistance, timeAgo } from '@/lib/vibe';
 
-// Venues saved with the heart, the ones on fire first
+// Venues saved with the heart, nearest first
 export default function Favorites() {
   const colors = useColors();
   const { session } = useAuth();
-  const { venues, vibes, favorites, toggleFavorite } = useCity();
+  const { venues, vibes, favorites, position, toggleFavorite } = useCity();
 
   const rows = useMemo(
-    () => venues.filter((v) => favorites.has(v.id)).sort((a, b) => (vibes[b.id]?.vibe_score ?? -1) - (vibes[a.id]?.vibe_score ?? -1)),
-    [venues, vibes, favorites],
+    () => venues.filter((v) => favorites.has(v.id)).sort(byDistance(position)),
+    [venues, favorites, position],
   );
 
   if (!session) {
@@ -53,7 +53,8 @@ export default function Favorites() {
             <View style={{ flex: 1 }}>
               <Text style={[styles.name, { color: colors.text }]}>{v.name}</Text>
               <Text style={[styles.meta, { color: colors.textSecondary }]}>
-                {VENUE_TYPE_LABELS[v.type]} · {now?.last_report_at ? timeAgo(now.last_report_at) : 'nema svežih prijava'}
+                {VENUE_TYPE_LABELS[v.type]}
+                {position ? ` · ${formatDistance(distanceMeters(position, v))}` : ''} · {now?.last_report_at ? timeAgo(now.last_report_at) : 'nema svežih prijava'}
               </Text>
             </View>
             <VibeBadge score={now?.vibe_score ?? null} />
