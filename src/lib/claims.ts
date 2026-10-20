@@ -1,9 +1,9 @@
 // Ways to prove you own a venue (see create_venue_claim in the database). For
 // phone and email the admin sends a secret code to the venue itself and the
 // owner types it in the app; for Instagram and Facebook the owner sends us the
-// code we show them from the venue's profile; a video or a document is checked
-// by the admin; express skips the proof and waits for the membership payment.
-export type ClaimMethod = 'phone' | 'email' | 'instagram' | 'facebook' | 'video' | 'document' | 'express';
+// code we show them from the venue's profile; a document is checked by the
+// admin; express skips the proof and waits for the membership payment.
+export type ClaimMethod = 'phone' | 'email' | 'instagram' | 'facebook' | 'document' | 'express';
 
 // VibeIN's own profiles, where owners send their code in a private message
 export const VIBEIN_INSTAGRAM = '@vibein.app';
@@ -46,12 +46,6 @@ export const CLAIM_METHODS: Record<ClaimMethod, MethodInfo> = {
     howTo: (link) => `Pošalji ovaj kod porukom sa stranice ${link} na Facebook stranicu ${VIBEIN_FACEBOOK}.`,
     check: (_, link) =>
       `U porukama Facebook stranice ${VIBEIN_FACEBOOK} nađi ovaj kod. Mora da stigne sa ${link}, a proveri i da je to zaista stranica ovog lokala.`,
-  },
-  video: {
-    label: 'Video provera',
-    hint: 'Snimi jedan video bez prekida, do 60 sekundi: tabla ili ulaz lokala spolja, pa unutrašnjost, pa nešto što samo osoblje može (otključaš vrata, otvoriš kasu, uđeš iza šanka).',
-    howTo: () => 'Dobili smo video. Pogledaćemo ga i javiti ti čim odobrimo zahtev.',
-    check: () => 'Pogledaj video. Mora biti jedan snimak bez prekida: lokal spolja sa tablom, unutrašnjost i nešto što samo osoblje može.',
   },
   document: {
     label: 'Dokument',

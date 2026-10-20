@@ -1,9 +1,8 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Choice, Field, SubmitButton, formStyles } from '@/components/form';
-import { VideoRecorder, type RecordedVideo } from '@/components/video-recorder';
 import { Fonts, Spacing, useColors } from '@/constants/theme';
 import { useAuth } from '@/lib/auth';
 import { CLAIM_METHODS, claimMethodInfo, hasSecretCode, type ClaimMethod } from '@/lib/claims';
@@ -32,7 +31,7 @@ function pickDocument(): Promise<File | null> {
 
 // A person asks to manage a venue and proves it is theirs: a code sent to the
 // venue's phone or email, a code they message us from the venue's Instagram or
-// Facebook, a video filmed on the spot, a document, or express (no proof, paid
+// Facebook, a document, or express (no proof, paid
 // membership). An admin checks it and approves. While the request waits, this
 // screen says what happens next and shows or takes the code.
 export default function ClaimScreen() {
@@ -45,8 +44,6 @@ export default function ClaimScreen() {
   const [link, setLink] = useState('');
   const [note, setNote] = useState('');
   const [file, setFile] = useState<File | null>(null);
-  const [video, setVideo] = useState<RecordedVideo | null>(null);
-  const [recorderOpen, setRecorderOpen] = useState(false);
   const [code, setCode] = useState('');
   const [codeResult, setCodeResult] = useState<boolean | null>(null);
   const [busy, setBusy] = useState(false);
@@ -75,7 +72,7 @@ export default function ClaimScreen() {
   // The venue's phone already in the app is used as it is
   const known = method === 'phone' ? venue?.contact?.phone?.trim() || null : null;
   const askLink = ['phone', 'email', 'instagram', 'facebook'].includes(method) && !known;
-  const ready = method === 'document' ? !!file : method === 'video' ? !!video : !askLink || link.trim().length >= 3;
+  const ready = method === 'document' ? !!file : !askLink || link.trim().length >= 3;
 
   async function upload(body: Blob | ArrayBuffer, ext: string, contentType: string) {
     const path = `${session!.user.id}/${Date.now()}.${ext}`;
@@ -92,14 +89,7 @@ export default function ClaimScreen() {
       filePath = await upload(file, file.name.split('.').pop()?.toLowerCase() || 'jpg', file.type);
       if (!filePath) {
         setBusy(false);
-        return setError('Dokument nije poslat, pokušaj ponovo. Slika ili PDF, najviše 50 MB.');
-      }
-    }
-    if (method === 'video' && video) {
-      filePath = await upload(await (await fetch(video.uri)).arrayBuffer(), 'mp4', 'video/mp4');
-      if (!filePath) {
-        setBusy(false);
-        return setError('Video nije poslat, pokušaj ponovo.');
+        return setError('Dokument nije poslat, pokušaj ponovo. Slika ili PDF, najviše 10 MB.');
       }
     }
     const { error: rpcError } = await supabase.rpc('create_venue_claim', {
@@ -207,13 +197,6 @@ export default function ClaimScreen() {
           keyboardType={method === 'phone' ? 'phone-pad' : method === 'email' ? 'email-address' : 'default'}
         />
       )}
-      {method === 'video' && (
-        <Pressable
-          onPress={() => (video ? setVideo(null) : setRecorderOpen(true))}
-          style={[styles.pick, { backgroundColor: colors.backgroundElement }]}>
-          <Text style={[styles.pickText, text]}>{video ? `Video ${video.durationS} s (snimi ponovo)` : 'Snimi video'}</Text>
-        </Pressable>
-      )}
       {method === 'document' &&
         (Platform.OS === 'web' ? (
           <Pressable
@@ -235,17 +218,6 @@ export default function ClaimScreen() {
       />
       {error && <Text style={formStyles.error}>{error}</Text>}
       <SubmitButton title="Pošalji zahtev" onPress={send} busy={busy} disabled={!ready} />
-
-      <Modal visible={recorderOpen} animationType="slide" onRequestClose={() => setRecorderOpen(false)}>
-        <VideoRecorder
-          caption={venue?.name}
-          onCancel={() => setRecorderOpen(false)}
-          onDone={(v) => {
-            setVideo(v);
-            setRecorderOpen(false);
-          }}
-        />
-      </Modal>
     </ScrollView>
   );
 }

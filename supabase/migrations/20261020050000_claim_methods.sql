@@ -4,8 +4,6 @@
 --   email:     the same, by email to an address on the venue's own domain
 --   instagram, facebook: the owner sends the code we show them in a private
 --              message from the venue's profile to VibeIN's profile
---   video:     one unbroken clip recorded in the app: sign outside, inside, and
---              something only staff can do (unlock the door, open the till)
 --   document:  business registration, lease or utility bill
 --   express:   no proof; the venue is handed over as soon as the membership
 --              is paid, without the free trial
@@ -15,11 +13,12 @@
 alter table venue_claims drop constraint if exists venue_claims_method_check;
 -- Claims sent with the earlier methods stay as they are
 alter table venue_claims add constraint venue_claims_method_check
-  check (method in ('phone', 'email', 'instagram', 'facebook', 'video', 'document', 'express')) not valid;
+  check (method in ('phone', 'email', 'instagram', 'facebook', 'document', 'express')) not valid;
 
+-- Documents only (an earlier version of this file also allowed videos)
 update storage.buckets
-set file_size_limit = 52428800,
-    allowed_mime_types = array['image/jpeg', 'image/png', 'image/heic', 'image/webp', 'application/pdf', 'video/mp4', 'video/quicktime', 'video/webm']
+set file_size_limit = 10485760,
+    allowed_mime_types = array['image/jpeg', 'image/png', 'image/heic', 'image/webp', 'application/pdf']
 where id = 'claim-docs';
 
 create or replace function create_venue_claim(
@@ -46,7 +45,7 @@ begin
   if v_venue.owner_id is not null then
     raise exception 'venue_has_owner';
   end if;
-  if p_method not in ('phone', 'email', 'instagram', 'facebook', 'video', 'document', 'express') then
+  if p_method not in ('phone', 'email', 'instagram', 'facebook', 'document', 'express') then
     raise exception 'invalid_method';
   end if;
 
@@ -60,7 +59,7 @@ begin
   if p_method in ('phone', 'email', 'instagram', 'facebook') and v_link is null then
     raise exception 'venue_link_missing';
   end if;
-  if p_method in ('video', 'document') and (p_document_path is null or split_part(p_document_path, '/', 1) <> v_uid::text) then
+  if p_method = 'document' and (p_document_path is null or split_part(p_document_path, '/', 1) <> v_uid::text) then
     raise exception 'document_missing';
   end if;
 
@@ -69,7 +68,7 @@ begin
     p_venue_id, v_uid, nullif(trim(p_note), ''), p_method, v_link,
     case when p_method in ('instagram', 'facebook') then lpad((floor(random() * 1000000))::int::text, 6, '0') end,
     case when p_method in ('phone', 'email') then lpad((floor(random() * 1000000))::int::text, 6, '0') end,
-    case when p_method in ('video', 'document') then p_document_path end
+    case when p_method = 'document' then p_document_path end
   ) returning id into v_id;
   return v_id;
 end;

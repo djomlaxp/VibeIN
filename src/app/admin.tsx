@@ -122,7 +122,7 @@ export default function AdminScreen() {
                   )}
                   {item.document_path && (
                     <Pressable onPress={() => openDocument(item.document_path!)}>
-                      <Text style={[text, styles.link]}>{item.method === 'video' ? 'Pogledaj video' : 'Otvori dokument'}</Text>
+                      <Text style={[text, styles.link]}>Otvori dokument</Text>
                     </Pressable>
                   )}
                 </>
