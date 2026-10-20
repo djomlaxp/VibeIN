@@ -134,7 +134,7 @@ export default function AdminScreen() {
                   'nema kontakta'}
               </Text>
               <Actions
-                yes="Odobri"
+                yes={item.method === 'express' ? 'Uplata stigla, odobri' : 'Odobri'}
                 no="Odbij"
                 onYes={() =>
                   run('review_venue_claim', {

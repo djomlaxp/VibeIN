@@ -15,6 +15,7 @@ type PendingClaim = {
   id: string;
   method: string | null;
   venue_link: string | null;
+  code: string | null;
   secret_confirmed: boolean;
 };
 
@@ -29,15 +30,16 @@ function pickDocument(): Promise<File | null> {
   });
 }
 
-// A person asks to manage a venue and proves it is theirs the way the big
-// services do: a code sent to the venue's phone, email or address, a video
-// filmed on the spot, or a document. An admin checks it and approves. While
-// the request waits, this screen says what happens next and takes the code.
+// A person asks to manage a venue and proves it is theirs: a code sent to the
+// venue's phone or email, a code they message us from the venue's Instagram or
+// Facebook, a video filmed on the spot, a document, or express (no proof, paid
+// membership). An admin checks it and approves. While the request waits, this
+// screen says what happens next and shows or takes the code.
 export default function ClaimScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const colors = useColors();
   const { session } = useAuth();
-  const [venue, setVenue] = useState<Pick<Venue, 'name' | 'address' | 'contact'> | null>(null);
+  const [venue, setVenue] = useState<Pick<Venue, 'name' | 'contact'> | null>(null);
   const [claim, setClaim] = useState<PendingClaim | null | undefined>(undefined);
   const [method, setMethod] = useState<ClaimMethod>('phone');
   const [link, setLink] = useState('');
@@ -53,10 +55,10 @@ export default function ClaimScreen() {
   const load = useCallback(async () => {
     if (!session) return;
     const [{ data: venueRow }, { data }] = await Promise.all([
-      supabase.from('venues').select('name, address, contact').eq('id', id).maybeSingle(),
+      supabase.from('venues').select('name, contact').eq('id', id).maybeSingle(),
       supabase
         .from('venue_claims')
-        .select('id, method, venue_link, secret_confirmed')
+        .select('id, method, venue_link, code, secret_confirmed')
         .eq('venue_id', id)
         .eq('user_id', session.user.id)
         .eq('status', 'pending')
@@ -70,11 +72,9 @@ export default function ClaimScreen() {
     load();
   }, [load]);
 
-  // The venue's phone and address already in the app are used as they are
-  const knownPhone = venue?.contact?.phone?.trim() || null;
-  const knownAddress = venue?.address?.trim() || null;
-  const known = method === 'phone' ? knownPhone : method === 'postcard' ? knownAddress : null;
-  const askLink = (method === 'phone' || method === 'email' || method === 'postcard') && !known;
+  // The venue's phone already in the app is used as it is
+  const known = method === 'phone' ? venue?.contact?.phone?.trim() || null : null;
+  const askLink = ['phone', 'email', 'instagram', 'facebook'].includes(method) && !known;
   const ready = method === 'document' ? !!file : method === 'video' ? !!video : !askLink || link.trim().length >= 3;
 
   async function upload(body: Blob | ArrayBuffer, ext: string, contentType: string) {
@@ -142,6 +142,14 @@ export default function ClaimScreen() {
       <ScrollView style={{ backgroundColor: colors.background }} contentContainerStyle={formStyles.content}>
         <Text style={[styles.title, text]}>Zahtev je poslat</Text>
         <Text style={[styles.body, text]}>{m ? m.howTo(claim.venue_link) : 'Proverićemo podatke koje si poslao i javiti ti.'}</Text>
+        {claim.code && (
+          <View style={[styles.codeBox, { backgroundColor: colors.backgroundElement }]}>
+            <Text style={[styles.knownLabel, { color: colors.textSecondary }]}>Tvoj kod</Text>
+            <Text style={[styles.code, { color: colors.accent }]} selectable>
+              {claim.code}
+            </Text>
+          </View>
+        )}
         {hasSecretCode(claim.method) &&
           (claim.secret_confirmed ? (
             <Text style={[styles.body, { color: colors.accent }]}>Kod je tačan. Odobrićemo zahtev uskoro.</Text>
@@ -170,8 +178,7 @@ export default function ClaimScreen() {
   return (
     <ScrollView style={{ backgroundColor: colors.background }} contentContainerStyle={formStyles.content}>
       <Text style={formStyles.hint}>
-        Kada odobrimo zahtev, moći ćeš da uređuješ opis, radno vreme i kontakt ovog mesta i da objavljuješ promocije i najave. Sve je
-        besplatno.
+        Kada odobrimo zahtev, moći ćeš da uređuješ opis, radno vreme i kontakt ovog mesta i da objavljuješ promocije i najave.
       </Text>
       <Choice
         label="Kako ćeš dokazati da je mesto tvoje?"
@@ -186,18 +193,14 @@ export default function ClaimScreen() {
       <Text style={formStyles.hint}>{CLAIM_METHODS[method].hint}</Text>
       {known && (
         <View style={[styles.known, { backgroundColor: colors.backgroundElement }]}>
-          <Text style={[styles.knownLabel, { color: colors.textSecondary }]}>
-            {method === 'phone' ? 'Zovemo broj' : 'Šaljemo na adresu'}
-          </Text>
+          <Text style={[styles.knownLabel, { color: colors.textSecondary }]}>Zovemo broj</Text>
           <Text style={[styles.body, text]}>{known}</Text>
         </View>
       )}
       {askLink && (
         <Field
-          label={method === 'phone' ? 'Javni broj telefona lokala' : method === 'email' ? 'Imejl lokala' : 'Adresa lokala'}
-          placeholder={
-            method === 'phone' ? 'Broj sa Google-a, menija ili ulaza' : method === 'email' ? 'info@imelokala.rs' : 'Ulica i broj, grad'
-          }
+          label={LINK_FIELDS[method]!.label}
+          placeholder={LINK_FIELDS[method]!.placeholder}
           value={link}
           onChangeText={setLink}
           autoCapitalize="none"
@@ -247,11 +250,21 @@ export default function ClaimScreen() {
   );
 }
 
+// What we ask about the venue for the methods that need it
+const LINK_FIELDS: Partial<Record<ClaimMethod, { label: string; placeholder: string }>> = {
+  phone: { label: 'Javni broj telefona lokala', placeholder: 'Broj sa Google-a, menija ili ulaza' },
+  email: { label: 'Imejl lokala', placeholder: 'info@imelokala.rs' },
+  instagram: { label: 'Instagram profil lokala', placeholder: '@imelokala' },
+  facebook: { label: 'Facebook stranica lokala', placeholder: 'facebook.com/imelokala' },
+};
+
 const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   title: { fontFamily: Fonts.displayBold, fontSize: 22 },
   body: { fontFamily: Fonts.body, fontSize: 16, lineHeight: 23 },
   known: { padding: Spacing.three, borderRadius: 12, gap: 2 },
+  codeBox: { alignItems: 'center', padding: Spacing.four, borderRadius: 16, gap: Spacing.one },
+  code: { fontFamily: Fonts.display, fontSize: 40, letterSpacing: 6 },
   knownLabel: { fontFamily: Fonts.bodyBold, fontSize: 13 },
   pick: { padding: Spacing.three, borderRadius: 12, alignItems: 'center' },
   pickText: { fontFamily: Fonts.bodyBold, fontSize: 15 },
