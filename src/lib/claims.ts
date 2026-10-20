@@ -1,3 +1,5 @@
+import { APP_INSTAGRAM } from '@/lib/app-info';
+
 // Ways to prove you own a venue (see create_venue_claim in the database). For
 // phone and email the admin sends a secret code to the venue itself and the
 // owner types it in the app; for Instagram and Facebook the owner sends us the
@@ -6,7 +8,7 @@
 export type ClaimMethod = 'phone' | 'email' | 'instagram' | 'facebook' | 'document' | 'express';
 
 // VibeIN's own profiles, where owners send their code in a private message
-export const VIBEIN_INSTAGRAM = '@vibein.app';
+export const VIBEIN_INSTAGRAM = `@${APP_INSTAGRAM}`;
 export const VIBEIN_FACEBOOK = 'VibeIN';
 
 type MethodInfo = {

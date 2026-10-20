@@ -1,9 +1,9 @@
 import { router, type Href } from 'expo-router';
-import { Bell, ChevronRight, LogOut, Mail, ShieldCheck, Store, UserRound, type LucideIcon } from 'lucide-react-native';
+import { AtSign, Bell, ChevronRight, LogOut, Mail, ShieldCheck, Store, UserRound, type LucideIcon } from 'lucide-react-native';
 import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Fonts, Spacing, useColors } from '@/constants/theme';
-import { APP_EMAIL } from '@/lib/app-info';
+import { APP_EMAIL, APP_INSTAGRAM } from '@/lib/app-info';
 import { useAuth } from '@/lib/auth';
 import { useCity } from '@/lib/city';
 import { supabase } from '@/lib/supabase';
@@ -44,6 +44,11 @@ export default function Profile() {
           <Row key={v.id} icon={Store} label={`Moje mesto: ${v.name}`} href={{ pathname: '/venue/[id]', params: { id: v.id } }} />
         ))}
         <Row icon={Mail} label={`Piši nam: ${APP_EMAIL}`} onPress={() => Linking.openURL(`mailto:${APP_EMAIL}`)} />
+        <Row
+          icon={AtSign}
+          label={`Instagram: @${APP_INSTAGRAM}`}
+          onPress={() => Linking.openURL(`https://instagram.com/${APP_INSTAGRAM}`)}
+        />
       </View>
       <Pressable onPress={() => supabase.auth.signOut()} style={[styles.card, styles.row, { backgroundColor: colors.backgroundElement }]}>
         <LogOut size={20} color={colors.danger} />
