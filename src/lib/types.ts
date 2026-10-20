@@ -52,7 +52,7 @@ export type Post = {
 
 export type AppNotification = {
   id: string;
-  type: 'video_archived';
+  type: 'video_archived' | 'venue_issue' | 'venue_claim';
   report_id: string | null;
   venue_id: string | null;
   read_at: string | null;

@@ -34,13 +34,14 @@ export default function Home() {
 
   useFocusEffect(
     useCallback(() => {
+      reload();
       if (!session) return setUnread(0);
       supabase
         .from('notifications')
         .select('id', { count: 'exact', head: true })
         .is('read_at', null)
         .then(({ count }) => setUnread(count ?? 0));
-    }, [session]),
+    }, [session, reload]),
   );
 
   // Venues people reported in the last 90 minutes, hottest first

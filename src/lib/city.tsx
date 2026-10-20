@@ -63,7 +63,10 @@ export function CityProvider({ children }: { children: ReactNode }) {
       .channel('vibe-reports')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'vibe_reports' }, reload)
       .subscribe();
+    // Realtime may not reach every browser, so also refresh every minute
+    const timer = setInterval(reload, 60_000);
     return () => {
+      clearInterval(timer);
       supabase.removeChannel(channel);
     };
   }, [reload]);

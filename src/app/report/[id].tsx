@@ -8,12 +8,14 @@ import { VIBE_ICONS, genreIcon } from '@/components/icons';
 import { VideoRecorder, type RecordedVideo } from '@/components/video-recorder';
 import { Colors, Fonts, Spacing, useColors } from '@/constants/theme';
 import { useAuth } from '@/lib/auth';
+import { useCity } from '@/lib/city';
 import { VIDEO_BUCKET, supabase } from '@/lib/supabase';
 import { CROWD_LABELS, MAX_GENRE_LENGTH, MUSIC_GENRES, OTHER_GENRE, VIBE_LABELS, errorMessage } from '@/lib/vibe';
 
 export default function ReportScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const colors = useColors();
+  const { reload } = useCity();
   const { session } = useAuth();
   const [vibe, setVibe] = useState<number | null>(null);
   const [crowd, setCrowd] = useState<number | null>(null);
@@ -74,6 +76,8 @@ export default function ReportScreen() {
         setError(errorMessage(rpcError));
         return;
       }
+      // Show the new report right away on every screen
+      await reload();
       router.back();
     } finally {
       setSending(false);
