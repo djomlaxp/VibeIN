@@ -1,3 +1,5 @@
+import type { ClaimMethod } from '@/lib/claims';
+
 export type VenueType = 'club' | 'cafe' | 'restaurant' | 'concert_venue' | 'stadium';
 
 export type Venue = {
@@ -61,14 +63,22 @@ export type AppNotification = {
   report: { video_path: string | null; archived: boolean; archive_withdrawn: boolean } | null;
 };
 
+// A request to manage a venue, as the admin sees it (admin_pending_claims())
 export type VenueClaim = {
   id: string;
   venue_id: string;
-  user_id: string;
+  venue_name: string;
+  venue_contact: { phone?: string | null; instagram?: string | null; website?: string | null } | null;
   proof: string | null;
-  status: 'pending' | 'approved' | 'rejected';
+  method: ClaimMethod | null;
+  venue_link: string | null;
+  code: string | null;
+  secret_code: string | null;
+  secret_confirmed: boolean;
+  secret_attempts: number;
+  document_path: string | null;
+  email: string | null;
   created_at: string;
-  venue: { name: string } | null;
 };
 
 export type VenueIssue = {
