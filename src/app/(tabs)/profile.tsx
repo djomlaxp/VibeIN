@@ -1,8 +1,9 @@
 import { router, type Href } from 'expo-router';
-import { Bell, ChevronRight, LogOut, ShieldCheck, Store, UserRound, type LucideIcon } from 'lucide-react-native';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Bell, ChevronRight, LogOut, Mail, ShieldCheck, Store, UserRound, type LucideIcon } from 'lucide-react-native';
+import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Fonts, Spacing, useColors } from '@/constants/theme';
+import { APP_EMAIL } from '@/lib/app-info';
 import { useAuth } from '@/lib/auth';
 import { useCity } from '@/lib/city';
 import { supabase } from '@/lib/supabase';
@@ -16,7 +17,9 @@ export default function Profile() {
     return (
       <View style={[styles.empty, { backgroundColor: colors.background }]}>
         <UserRound size={48} color={colors.accent} />
-        <Text style={[styles.emptyText, { color: colors.text }]}>Prijavi se da bi javljao atmosferu, čuvao omiljena mesta i dobijao obaveštenja.</Text>
+        <Text style={[styles.emptyText, { color: colors.text }]}>
+          Prijavi se da bi javljao atmosferu, čuvao omiljena mesta i dobijao obaveštenja.
+        </Text>
         <Pressable onPress={() => router.push('/login')} style={[styles.button, { backgroundColor: colors.accent }]}>
           <Text style={[styles.buttonText, { color: colors.onAccent }]}>Prijavi se</Text>
         </Pressable>
@@ -40,6 +43,7 @@ export default function Profile() {
         {mine.map((v) => (
           <Row key={v.id} icon={Store} label={`Moje mesto: ${v.name}`} href={{ pathname: '/venue/[id]', params: { id: v.id } }} />
         ))}
+        <Row icon={Mail} label={`Piši nam: ${APP_EMAIL}`} onPress={() => Linking.openURL(`mailto:${APP_EMAIL}`)} />
       </View>
       <Pressable onPress={() => supabase.auth.signOut()} style={[styles.card, styles.row, { backgroundColor: colors.backgroundElement }]}>
         <LogOut size={20} color={colors.danger} />
@@ -49,10 +53,10 @@ export default function Profile() {
   );
 }
 
-function Row({ icon: Icon, label, href }: { icon: LucideIcon; label: string; href: Href }) {
+function Row({ icon: Icon, label, href, onPress }: { icon: LucideIcon; label: string; href?: Href; onPress?: () => void }) {
   const colors = useColors();
   return (
-    <Pressable onPress={() => router.push(href)} style={styles.row}>
+    <Pressable onPress={onPress ?? (() => router.push(href!))} style={styles.row}>
       <Icon size={20} color={colors.text} />
       <Text style={[styles.rowText, { color: colors.text }]}>{label}</Text>
       <ChevronRight size={20} color={colors.textSecondary} />
