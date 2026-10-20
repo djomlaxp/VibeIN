@@ -7,7 +7,8 @@ import { MAX_VIDEO_SECONDS } from '@/lib/vibe';
 export type RecordedVideo = { uri: string; durationS: number };
 
 // Records straight from the camera; there is deliberately no gallery picker.
-export function VideoRecorder({ onDone, onCancel }: { onDone: (v: RecordedVideo) => void; onCancel: () => void }) {
+// caption: venue name; the web recorder burns it into the clip with the VibeIN mark
+export function VideoRecorder({ onDone, onCancel }: { onDone: (v: RecordedVideo) => void; onCancel: () => void; caption?: string }) {
   const camera = useRef<CameraView>(null);
   const [camPerm, requestCam] = useCameraPermissions();
   const [micPerm, requestMic] = useMicrophonePermissions();

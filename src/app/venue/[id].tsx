@@ -1,10 +1,11 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, router, useFocusEffect, useLocalSearchParams } from 'expo-router';
-import { AtSign, BadgeCheck, Flame, Globe, Grid3x3, Heart, Navigation, Pencil, Phone, Pin, Play, Plus, Star, Trash2, type LucideIcon } from 'lucide-react-native';
+import { AtSign, BadgeCheck, Flame, Globe, Grid3x3, Heart, Navigation, Pencil, Phone, Pin, Play, Plus, Share2, Star, Trash2, type LucideIcon } from 'lucide-react-native';
 import { useCallback, useState } from 'react';
-import { Alert, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { VIBE_ICONS, genreIcon, type IconComponent } from '@/components/icons';
+import { ShareSheet } from '@/components/share-sheet';
 import { POST_ICONS, VenueAvatar } from '@/components/venue-avatar';
 import { VenueMedia } from '@/components/venue-media';
 import { Fonts, LiveGradient, Spacing, useColors } from '@/constants/theme';
@@ -25,6 +26,7 @@ export default function VenueScreen() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [claimPending, setClaimPending] = useState(false);
   const [openPost, setOpenPost] = useState<string | null>(null);
+  const [sharing, setSharing] = useState(false);
   const [gridTab, setGridTab] = useState<'recent' | 'archive'>('recent');
   const { favorites, toggleFavorite } = useCity();
 
@@ -86,7 +88,17 @@ export default function VenueScreen() {
 
   return (
     <ScrollView style={{ backgroundColor: colors.background }} contentContainerStyle={styles.content}>
-      <Stack.Screen options={{ title: venue.name }} />
+      <Stack.Screen
+        options={{
+          title: venue.name,
+          headerRight: () => (
+            <Pressable onPress={() => setSharing(true)} aria-label="Podeli" hitSlop={10} style={styles.headerButton}>
+              <Share2 size={22} color={colors.text} />
+            </Pressable>
+          ),
+        }}
+      />
+      {sharing && <ShareSheet venue={venue} clip={null} onClose={() => setSharing(false)} />}
 
       <View style={styles.profile}>
         <VenueAvatar type={venue.type} size={88} live={!!now?.report_count} />
@@ -335,6 +347,7 @@ const styles = StyleSheet.create({
   postType: { fontFamily: Fonts.bodyBold, fontSize: 11, letterSpacing: 1 },
   paragraph: { fontSize: 16, lineHeight: 22 },
   card: { padding: Spacing.three, borderRadius: 16, gap: Spacing.two },
+  headerButton: { paddingHorizontal: Platform.OS === 'web' ? Spacing.three : 0 },
   heart: { width: 48, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   highlights: { gap: Spacing.three },
   highlight: { width: 72, alignItems: 'center', gap: 4 },

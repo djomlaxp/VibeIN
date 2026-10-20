@@ -1,11 +1,12 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { Heart, MapPin, Users, Video, X, type LucideIcon } from 'lucide-react-native';
+import { Heart, MapPin, Share2, Users, Video, X, type LucideIcon } from 'lucide-react-native';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FlatList, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { genreIcon } from '@/components/icons';
 import { Pill } from '@/components/pill';
+import { ShareSheet } from '@/components/share-sheet';
 import { VENUE_ICONS, VenueAvatar } from '@/components/venue-avatar';
 import { VenueMedia } from '@/components/venue-media';
 import { VibeBadge } from '@/components/vibe-badge';
@@ -37,6 +38,7 @@ export default function Live() {
   const [height, setHeight] = useState(0);
   const [active, setActive] = useState(0);
   const [venueClips, setVenueClips] = useState<VibeReport[] | null>(null);
+  const [sharing, setSharing] = useState<Slide | null>(null);
   const list = useRef<FlatList<Slide>>(null);
   const clipMode = params.clips === '1' && !!params.venue;
 
@@ -135,6 +137,7 @@ export default function Live() {
                   <VibeBadge score={clipMode && clip ? clip.vibe : now?.vibe_score ?? null} size="large" />
                   <RailButton icon={Heart} label={saved ? 'Sačuvano' : 'Sačuvaj'} active={saved} onPress={() => save(v.id)} />
                   <RailButton icon={MapPin} label="Vodi me" onPress={() => Linking.openURL(`https://www.google.com/maps/dir/?api=1&destination=${v.lat},${v.lng}`)} />
+                  <RailButton icon={Share2} label="Podeli" onPress={() => setSharing(item)} />
                   <RailButton icon={Video} label="Snimi" onPress={() => router.push(session ? { pathname: '/report/[id]', params: { id: v.id } } : '/login')} />
                 </View>
                 <View style={[styles.info, { paddingBottom: insets.bottom + Spacing.four }]}>
@@ -156,6 +159,7 @@ export default function Live() {
           }}
         />
       )}
+      {sharing && <ShareSheet venue={sharing.venue} clip={sharing.clip} onClose={() => setSharing(null)} />}
       <View style={[styles.top, { paddingTop: insets.top + Spacing.two }]} pointerEvents="box-none">
         <Pressable onPress={close} aria-label="Zatvori" hitSlop={10} style={styles.close}>
           <X size={26} color={Colors.text} />
@@ -200,7 +204,7 @@ const styles = StyleSheet.create({
   tabs: { flexDirection: 'row', gap: Spacing.four },
   tab: { fontFamily: Fonts.bodyBold, fontSize: 16, color: Colors.textSecondary, paddingBottom: 4, ...shadow },
   tabOn: { color: Colors.text, borderBottomWidth: 2, borderColor: Colors.accent },
-  rail: { position: 'absolute', right: Spacing.three, alignItems: 'center', gap: Spacing.four },
+  rail: { position: 'absolute', right: Spacing.three, alignItems: 'center', gap: Spacing.three },
   railButton: { alignItems: 'center', gap: 2 },
   railText: { color: Colors.text, fontFamily: Fonts.bodyBold, fontSize: 12, ...shadow },
   info: { position: 'absolute', left: 0, right: 90, bottom: 0, paddingHorizontal: Spacing.three, gap: Spacing.two },
