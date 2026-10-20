@@ -1,9 +1,10 @@
-import { router } from 'expo-router';
+import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import type { AuthError } from '@supabase/supabase-js';
 import { Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { Fonts, Spacing, useColors } from '@/constants/theme';
+import { takePendingLink } from '@/lib/pending-link';
 import { supabase } from '@/lib/supabase';
 
 // Plain-language reasons for the Supabase auth errors people actually hit.
@@ -32,9 +33,16 @@ function redirectUrl() {
   return Platform.OS === 'web' ? new URL('.', window.location.href).href : undefined;
 }
 
+// After signing in, open the shared link the visitor came from, or the home feed.
+function enterApp() {
+  router.replace((takePendingLink() ?? '/') as never);
+}
+
 // Email + password for the first version; Google and Apple sign-in come later.
+// The welcome screen opens it with mode=signup for "Napravi profil".
 export default function LoginScreen() {
   const colors = useColors();
+  const signup = useLocalSearchParams<{ mode?: string }>().mode === 'signup';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState<string | null>(null);
@@ -42,13 +50,13 @@ export default function LoginScreen() {
   async function signIn() {
     const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
     if (error) setMessage(authMessage(error));
-    else router.back();
+    else enterApp();
   }
 
   async function signUp() {
     const { data, error } = await supabase.auth.signUp({ email: email.trim(), password, options: { emailRedirectTo: redirectUrl() } });
     if (error) setMessage(authMessage(error));
-    else if (data.session) router.back();
+    else if (data.session) enterApp();
     else setMessage('Poslali smo ti email. Klikni link u njemu da potvrdiš nalog, pa se prijavi.');
   }
 
@@ -62,14 +70,15 @@ export default function LoginScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <Stack.Screen options={{ title: signup ? 'Napravi profil' : 'Prijava' }} />
       <TextInput style={input} placeholder="Email" placeholderTextColor={colors.textSecondary} autoCapitalize="none" keyboardType="email-address" value={email} onChangeText={setEmail} />
       <TextInput style={input} placeholder="Lozinka" placeholderTextColor={colors.textSecondary} secureTextEntry autoCapitalize="none" value={password} onChangeText={setPassword} />
       {message && <Text style={{ color: colors.textSecondary }}>{message}</Text>}
-      <Pressable style={[styles.button, { backgroundColor: colors.accent }]} onPress={signIn}>
-        <Text style={[styles.buttonText, { color: colors.onAccent }]}>Prijavi se</Text>
+      <Pressable style={[styles.button, { backgroundColor: colors.accent }]} onPress={signup ? signUp : signIn}>
+        <Text style={[styles.buttonText, { color: colors.onAccent }]}>{signup ? 'Napravi nalog' : 'Prijavi se'}</Text>
       </Pressable>
-      <Pressable style={styles.button} onPress={signUp}>
-        <Text style={[styles.buttonText, { color: colors.text }]}>Napravi nalog</Text>
+      <Pressable style={styles.button} onPress={signup ? signIn : signUp}>
+        <Text style={[styles.buttonText, { color: colors.text }]}>{signup ? 'Već imam nalog, prijavi me' : 'Napravi nalog'}</Text>
       </Pressable>
       <Pressable style={styles.link} onPress={resetPassword}>
         <Text style={{ color: colors.textSecondary }}>Zaboravio sam lozinku</Text>
