@@ -1,4 +1,4 @@
-import { Link, useFocusEffect } from 'expo-router';
+import { Link, router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Alert, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -52,25 +52,44 @@ export default function NotificationsScreen() {
       data={items}
       keyExtractor={(n) => n.id}
       ListEmptyComponent={<Text style={{ color: colors.textSecondary, textAlign: 'center' }}>Nema obaveštenja.</Text>}
-      renderItem={({ item }) => (
-        <View style={[styles.card, { backgroundColor: colors.backgroundElement }]}>
-          <Text style={{ color: colors.text }}>
-            <Link href={{ pathname: '/venue/[id]', params: { id: item.venue_id ?? '' } }} style={styles.bold}>
-              {item.venue?.name ?? 'Objekat'}
-            </Link>{' '}
-            je arhivirao tvoj snimak na svom profilu.
-            <Text style={{ color: colors.textSecondary }}>  {timeAgo(item.created_at)}</Text>
-          </Text>
-          {item.report?.video_path && <VideoClip path={item.report.video_path} />}
-          {item.report?.archived ? (
-            <Pressable onPress={() => withdraw(item)}>
-              <Text style={[styles.link, { color: colors.text }]}>Povuci snimak</Text>
+      renderItem={({ item }) => {
+        const venue = (
+          <Link href={{ pathname: '/venue/[id]', params: { id: item.venue_id ?? '' } }} style={styles.bold}>
+            {item.venue?.name ?? 'Objekat'}
+          </Link>
+        );
+        const when = <Text style={{ color: colors.textSecondary }}>  {timeAgo(item.created_at)}</Text>;
+        // Admin notices: someone reported a closed/renamed venue or wants to manage one
+        if (item.type !== 'video_archived') {
+          return (
+            <Pressable onPress={() => router.push('/admin')} style={[styles.card, { backgroundColor: colors.backgroundElement }]}>
+              <Text style={{ color: colors.text }}>
+                {item.type === 'venue_issue' ? 'Korisnik javlja da je mesto ' : 'Korisnik želi da preuzme profil mesta '}
+                {venue}
+                {item.type === 'venue_issue' ? ' zatvoreno ili promenilo ime.' : '.'}
+                {when}
+              </Text>
+              <Text style={[styles.link, { color: colors.text }]}>Pregledaj u admin delu</Text>
             </Pressable>
-          ) : (
-            item.report?.archive_withdrawn && <Text style={{ color: colors.textSecondary }}>Snimak je povučen.</Text>
-          )}
-        </View>
-      )}
+          );
+        }
+        return (
+          <View style={[styles.card, { backgroundColor: colors.backgroundElement }]}>
+            <Text style={{ color: colors.text }}>
+              {venue} je arhivirao tvoj snimak na svom profilu.
+              {when}
+            </Text>
+            {item.report?.video_path && <VideoClip path={item.report.video_path} />}
+            {item.report?.archived ? (
+              <Pressable onPress={() => withdraw(item)}>
+                <Text style={[styles.link, { color: colors.text }]}>Povuci snimak</Text>
+              </Pressable>
+            ) : (
+              item.report?.archive_withdrawn && <Text style={{ color: colors.textSecondary }}>Snimak je povučen.</Text>
+            )}
+          </View>
+        );
+      }}
     />
   );
 }
