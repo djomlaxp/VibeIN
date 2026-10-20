@@ -1,12 +1,13 @@
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { AdminStats } from '@/components/admin-stats';
 import { formStyles } from '@/components/form';
 import { WelcomeClipsAdmin } from '@/components/welcome-clips-admin';
 import { Fonts, Spacing, useColors } from '@/constants/theme';
-import { supabase } from '@/lib/supabase';
+import { CLAIM_METHODS, claimLinkUrl, hasSecretCode } from '@/lib/claims';
+import { CLAIM_DOCS_BUCKET, supabase } from '@/lib/supabase';
 import type { VenueClaim, VenueIssue } from '@/lib/types';
 import { errorMessage, timeAgo } from '@/lib/vibe';
 
@@ -24,18 +25,14 @@ export default function AdminScreen() {
 
   const load = useCallback(async () => {
     const [{ data: claimRows }, { data: issueRows }] = await Promise.all([
-      supabase
-        .from('venue_claims')
-        .select('id, venue_id, user_id, proof, status, created_at, venue:venues(name)')
-        .eq('status', 'pending')
-        .order('created_at'),
+      supabase.rpc('admin_pending_claims'),
       supabase
         .from('venue_issues')
         .select('id, venue_id, kind, new_name, created_at, venue:venues(name)')
         .eq('status', 'open')
         .order('created_at'),
     ]);
-    setClaims((claimRows as unknown as VenueClaim[]) ?? []);
+    setClaims((claimRows as VenueClaim[] | null) ?? []);
     setIssues((issueRows as unknown as VenueIssue[]) ?? []);
   }, []);
 
@@ -49,6 +46,12 @@ export default function AdminScreen() {
     const { error } = await supabase.rpc(rpc, args);
     setError(error ? errorMessage(error) : null);
     load();
+  }
+
+  async function openDocument(path: string) {
+    const { data, error } = await supabase.storage.from(CLAIM_DOCS_BUCKET).createSignedUrl(path, 600);
+    if (error || !data) return setError(errorMessage(error));
+    Linking.openURL(data.signedUrl);
   }
 
   const text = { color: colors.text };
@@ -92,9 +95,42 @@ export default function AdminScreen() {
           {claims.length === 0 && <Text style={formStyles.hint}>Nema zahteva koji čekaju.</Text>}
           {claims.map((item) => (
             <View key={item.id} style={[styles.card, { backgroundColor: colors.backgroundElement }]}>
-              <Text style={[styles.name, text]}>{item.venue?.name}</Text>
-              <Text style={text}>{item.proof}</Text>
-              <Text style={muted}>{timeAgo(item.created_at)}</Text>
+              <Text style={[styles.name, text]}>{item.venue_name}</Text>
+              <Text style={muted}>
+                {item.email} · {timeAgo(item.created_at)}
+              </Text>
+              {item.method && (
+                <>
+                  <Text style={[styles.method, { color: colors.accent }]}>{CLAIM_METHODS[item.method].label}</Text>
+                  {item.venue_link && (
+                    <Pressable
+                      disabled={!claimLinkUrl(item.method, item.venue_link)}
+                      onPress={() => Linking.openURL(claimLinkUrl(item.method, item.venue_link)!)}>
+                      <Text style={[text, styles.link]}>{item.venue_link}</Text>
+                    </Pressable>
+                  )}
+                  <Text style={text}>{CLAIM_METHODS[item.method].check(item.secret_code)}</Text>
+                  {item.code && <Text style={[styles.code, text]}>Kod: {item.code}</Text>}
+                  {hasSecretCode(item.method) && (
+                    <Text style={{ color: item.secret_confirmed ? colors.accent : colors.textSecondary }}>
+                      {item.secret_confirmed
+                        ? 'Vlasnik je upisao tačan kod.'
+                        : `Vlasnik još nije upisao kod${item.secret_attempts ? ` (pogrešnih pokušaja: ${item.secret_attempts})` : ''}.`}
+                    </Text>
+                  )}
+                  {item.document_path && (
+                    <Pressable onPress={() => openDocument(item.document_path!)}>
+                      <Text style={[text, styles.link]}>Otvori dokument</Text>
+                    </Pressable>
+                  )}
+                </>
+              )}
+              {item.proof && <Text style={text}>Napomena: {item.proof}</Text>}
+              <Text style={muted}>
+                U aplikaciji za ovo mesto:{' '}
+                {[item.venue_contact?.phone, item.venue_contact?.instagram, item.venue_contact?.website].filter(Boolean).join(', ') ||
+                  'nema kontakta'}
+              </Text>
               <Actions
                 yes="Odobri"
                 no="Odbij"
@@ -153,6 +189,9 @@ const styles = StyleSheet.create({
   title: { fontFamily: Fonts.displayBold, fontSize: 18 },
   card: { padding: Spacing.three, borderRadius: 16, gap: Spacing.two },
   name: { fontFamily: Fonts.bodyBold, fontSize: 16 },
+  method: { fontFamily: Fonts.bodyBold, fontSize: 14 },
+  code: { fontFamily: Fonts.bodyBold, fontSize: 18, letterSpacing: 2 },
+  link: { textDecorationLine: 'underline' },
   actions: { flexDirection: 'row', gap: Spacing.two },
   action: { flex: 1, padding: 12, borderRadius: 999, alignItems: 'center' },
   actionText: { fontFamily: Fonts.bodyBold },

@@ -34,3 +34,6 @@ export const WELCOME_BUCKET = 'welcome';
 export function welcomeClipUrl(path: string) {
   return supabase.storage.from(WELCOME_BUCKET).getPublicUrl(path).data.publicUrl;
 }
+
+// Private: documents that prove someone owns a venue, readable only by admins
+export const CLAIM_DOCS_BUCKET = 'claim-docs';

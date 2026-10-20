@@ -219,7 +219,9 @@ export default function VenueScreen() {
 
       {!venue.owner_id &&
         (claimPending ? (
-          <Text style={[muted, styles.center]}>Tvoj zahtev da upravljaš ovim mestom čeka odobrenje.</Text>
+          <Pressable onPress={() => router.push({ pathname: '/claim/[id]', params: { id: venue.id } })}>
+            <Text style={[muted, styles.center, styles.link]}>Tvoj zahtev da upravljaš ovim mestom čeka odobrenje. Pogledaj kod</Text>
+          </Pressable>
         ) : (
           <Pressable onPress={() => router.push(session ? { pathname: '/claim/[id]', params: { id: venue.id } } : '/login')}>
             <Text style={[muted, styles.center, styles.link]}>Vlasnik si ovog mesta? Preuzmi profil besplatno</Text>
