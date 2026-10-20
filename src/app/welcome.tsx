@@ -21,7 +21,7 @@ import { CITY, CROWD_LABELS, VENUE_TYPE_LABELS, VIBE_LABELS, distanceMeters, for
 type Example = { video: number; poster: number; label: string; score: number; crowd: number; minutes: number; length: string };
 const EXAMPLES: Example[] = [
   { video: require('@/assets/welcome/club.mp4'), poster: require('@/assets/welcome/club.jpg'), label: 'Klub', score: 4.8, crowd: 3, minutes: 2, length: '0:24' },
-  { video: require('@/assets/welcome/stadium.mp4'), poster: require('@/assets/welcome/stadium.jpg'), label: 'Stadion', score: 4.6, crowd: 3, minutes: 5, length: '0:41' },
+  { video: require('@/assets/welcome/cafe.mp4'), poster: require('@/assets/welcome/cafe.jpg'), label: 'Kafić', score: 4.6, crowd: 2, minutes: 5, length: '0:41' },
   { video: require('@/assets/welcome/concert.mp4'), poster: require('@/assets/welcome/concert.jpg'), label: 'Koncert', score: 4.5, crowd: 3, minutes: 8, length: '0:18' },
 ];
 
