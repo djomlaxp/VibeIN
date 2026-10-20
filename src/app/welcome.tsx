@@ -1,8 +1,9 @@
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
+import { useVideoPlayer, VideoView } from 'expo-video';
 import { Flame, Heart, Play, Users, Video } from 'lucide-react-native';
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View, type ScrollViewInstance } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -16,15 +17,13 @@ import { useCity } from '@/lib/city';
 import type { VenueType } from '@/lib/types';
 import { CITY, CROWD_LABELS, VENUE_TYPE_LABELS, VIBE_LABELS, timeAgo } from '@/lib/vibe';
 
-// Made-up example clips (drawn pictures, not real people or places) so a new
-// visitor sees what the app looks like before making a profile.
-const EXAMPLES: { image: number; label: string; score: number; crowd: number; minutes: number; length: string }[] = [
-  { image: require('@/assets/welcome/club-purple.jpg'), label: 'Klub', score: 4.8, crowd: 3, minutes: 2, length: '0:24' },
-  { image: require('@/assets/welcome/stadium.jpg'), label: 'Stadion', score: 4.6, crowd: 3, minutes: 5, length: '0:41' },
-  { image: require('@/assets/welcome/concert.jpg'), label: 'Koncert', score: 4.5, crowd: 3, minutes: 8, length: '0:18' },
-  { image: require('@/assets/welcome/club-lime.jpg'), label: 'Klub', score: 4.1, crowd: 2, minutes: 12, length: '0:33' },
-  { image: require('@/assets/welcome/kafana.jpg'), label: 'Kafana', score: 3.9, crowd: 2, minutes: 17, length: '0:52' },
-  { image: require('@/assets/welcome/cafe.jpg'), label: 'Kafić', score: 3.4, crowd: 1, minutes: 26, length: '0:15' },
+// Made-up looping example clips (animations, not real people or places) so a
+// new visitor sees what the app looks like before making a profile.
+type Example = { video: number; poster: number; label: string; score: number; crowd: number; minutes: number; length: string };
+const EXAMPLES: Example[] = [
+  { video: require('@/assets/welcome/club.mp4'), poster: require('@/assets/welcome/club.jpg'), label: 'Klub', score: 4.8, crowd: 3, minutes: 2, length: '0:24' },
+  { video: require('@/assets/welcome/stadium.mp4'), poster: require('@/assets/welcome/stadium.jpg'), label: 'Stadion', score: 4.6, crowd: 3, minutes: 5, length: '0:41' },
+  { video: require('@/assets/welcome/concert.mp4'), poster: require('@/assets/welcome/concert.jpg'), label: 'Koncert', score: 4.5, crowd: 3, minutes: 8, length: '0:18' },
 ];
 
 const FEATURES: { icon: IconComponent; title: string; text: string }[] = [
@@ -66,7 +65,7 @@ export default function Welcome() {
               <WhatYouGet />
             </ScrollView>
             <ScrollView style={{ width }} contentContainerStyle={styles.slide} showsVerticalScrollIndicator={false}>
-              <Examples width={width} />
+              <Examples width={width} active={page === 2} />
             </ScrollView>
           </ScrollView>
         )}
@@ -186,39 +185,68 @@ function WhatYouGet() {
   );
 }
 
-// Page 3: a grid of example clips, the way they look inside the app.
-function Examples({ width }: { width: number }) {
+// Page 3: example clips playing the way they do inside the app. They only
+// play while this page is on screen.
+function Examples({ width, active }: { width: number; active: boolean }) {
   const gap = Spacing.two;
-  const tile = Math.floor((width - Spacing.four * 2 - gap * 2) / 3);
+  const inner = width - Spacing.four * 2;
+  const bigWidth = Math.floor((inner - gap) * 0.6);
+  const smallWidth = inner - gap - bigWidth;
+  const smallHeight = Math.round(smallWidth * 1.33);
+  const [big, ...small] = EXAMPLES;
   return (
     <View style={{ flex: 1 }}>
       <Text style={[styles.headline, styles.headlineSmall, { marginTop: 0 }]}>
         Ovako izgleda <Text style={{ color: Colors.accent }}>uživo</Text>
       </Text>
       <Text style={[styles.body, { marginTop: Spacing.two }]}>Ljudi koji su na licu mesta šalju kratke snimke, do 60 sekundi.</Text>
-      <View style={[styles.grid, { gap, marginTop: Spacing.three }]}>
-        {EXAMPLES.map((e, i) => (
-          <View key={i} style={[styles.tile, { width: tile, height: Math.round(tile * 1.6) }]}>
-            <Image source={e.image} style={StyleSheet.absoluteFill} contentFit="cover" />
-            <LinearGradient colors={['transparent', 'rgba(12,18,16,0.9)']} style={styles.tileShade} />
-            <View style={styles.tileLength}>
-              <Play size={10} color={Colors.text} fill={Colors.text} />
-              <Text style={styles.tileSmall}>{e.length}</Text>
-            </View>
-            <View style={styles.tileInfo}>
-              <View style={styles.tileScoreRow}>
-                <Flame size={13} color={Colors.accent} />
-                <Text style={styles.tileScore}>{e.score.toFixed(1)}</Text>
-              </View>
-              <Text style={styles.tileLabel} numberOfLines={1}>
-                {e.label} · {CROWD_LABELS[e.crowd]}
-              </Text>
-              <Text style={styles.tileSmall}>pre {e.minutes} min</Text>
-            </View>
-          </View>
-        ))}
+      <View style={{ flexDirection: 'row', gap, marginTop: Spacing.three }}>
+        <ExampleClip example={big} width={bigWidth} height={smallHeight * 2 + gap} active={active} big />
+        <View style={{ gap }}>
+          {small.map((e) => (
+            <ExampleClip key={e.label} example={e} width={smallWidth} height={smallHeight} active={active} />
+          ))}
+        </View>
       </View>
       <Text style={styles.note}>Ovo su primeri. Pravi snimci iz Pančeva te čekaju unutra.</Text>
+    </View>
+  );
+}
+
+function ExampleClip({ example: e, width, height, active, big }: { example: Example; width: number; height: number; active: boolean; big?: boolean }) {
+  const player = useVideoPlayer(e.video, (p) => {
+    p.loop = true;
+    p.muted = true;
+  });
+  useEffect(() => {
+    if (active) player.play();
+    else player.pause();
+  }, [player, active]);
+
+  return (
+    <View style={[styles.tile, { width, height }]}>
+      <Image source={e.poster} style={StyleSheet.absoluteFill} contentFit="cover" />
+      <VideoView player={player} style={styles.video} contentFit="cover" nativeControls={false} />
+      <LinearGradient colors={['transparent', 'rgba(12,18,16,0.9)']} style={styles.tileShade} />
+      {big && (
+        <View style={styles.tileLive}>
+          <Pill live label="UŽIVO" />
+        </View>
+      )}
+      <View style={styles.tileLength}>
+        <Play size={10} color={Colors.text} fill={Colors.text} />
+        <Text style={styles.tileSmall}>{e.length}</Text>
+      </View>
+      <View style={styles.tileInfo}>
+        <View style={styles.tileScoreRow}>
+          <Flame size={big ? 18 : 13} color={Colors.accent} />
+          <Text style={[styles.tileScore, big && { fontSize: 20 }]}>{e.score.toFixed(1)}</Text>
+        </View>
+        <Text style={[styles.tileLabel, big && { fontSize: 14 }]} numberOfLines={1}>
+          {e.label} · {CROWD_LABELS[e.crowd]}
+        </Text>
+        <Text style={styles.tileSmall}>pre {e.minutes} min</Text>
+      </View>
     </View>
   );
 }
@@ -234,6 +262,8 @@ function Glow({ color, size = 300, style }: { color: string; size?: number; styl
 }
 
 const styles = StyleSheet.create({
+  // On web the video element keeps its own size unless told to fill the box
+  video: { position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' },
   screen: { flex: 1, backgroundColor: Colors.background, alignItems: 'center' },
   column: { flex: 1, width: '100%', maxWidth: 520, overflow: 'hidden' },
   slide: { flexGrow: 1, paddingHorizontal: Spacing.four, paddingTop: Spacing.four, overflow: 'hidden' },
@@ -253,9 +283,9 @@ const styles = StyleSheet.create({
   featureIcon: { width: 44, height: 44, borderRadius: 14, backgroundColor: Colors.backgroundSelected, alignItems: 'center', justifyContent: 'center' },
   featureTitle: { color: Colors.text, fontFamily: Fonts.bodyBold, fontSize: 16 },
   featureText: { color: Colors.textSecondary, fontFamily: Fonts.body, fontSize: 14, marginTop: 2 },
-  grid: { flexDirection: 'row', flexWrap: 'wrap' },
   tile: { borderRadius: 14, overflow: 'hidden', backgroundColor: Colors.backgroundElement },
   tileShade: { position: 'absolute', left: 0, right: 0, bottom: 0, height: '60%' },
+  tileLive: { position: 'absolute', top: 8, left: 8 },
   tileLength: { position: 'absolute', top: 6, right: 6, flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: 'rgba(12,18,16,0.7)', borderRadius: 999, paddingHorizontal: 6, paddingVertical: 2 },
   tileInfo: { position: 'absolute', left: 8, right: 8, bottom: 6 },
   tileScoreRow: { flexDirection: 'row', alignItems: 'center', gap: 3 },
