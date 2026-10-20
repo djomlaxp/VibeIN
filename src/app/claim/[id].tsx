@@ -4,6 +4,7 @@ import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, Text, V
 
 import { Choice, Field, SubmitButton, formStyles } from '@/components/form';
 import { Fonts, Spacing, useColors } from '@/constants/theme';
+import { APP_EMAIL } from '@/lib/app-info';
 import { useAuth } from '@/lib/auth';
 import { CLAIM_METHODS, claimMethodInfo, hasSecretCode, type ClaimMethod } from '@/lib/claims';
 import { CLAIM_DOCS_BUCKET, supabase } from '@/lib/supabase';
@@ -160,7 +161,9 @@ export default function ClaimScreen() {
             </>
           ))}
         {error && <Text style={formStyles.error}>{error}</Text>}
-        <Text style={formStyles.hint}>Kad odobrimo zahtev, na stranici mesta pojaviće ti se dugmad za uređivanje i objave.</Text>
+        <Text style={formStyles.hint}>
+          Kad odobrimo zahtev, na stranici mesta pojaviće ti se dugmad za uređivanje i objave. Pitanja? Piši nam na {APP_EMAIL}.
+        </Text>
       </ScrollView>
     );
   }
