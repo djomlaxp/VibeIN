@@ -15,7 +15,7 @@ import { CROWD_LABELS, MAX_GENRE_LENGTH, MUSIC_GENRES, OTHER_GENRE, VIBE_LABELS,
 export default function ReportScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const colors = useColors();
-  const { reload } = useCity();
+  const { reload, venues } = useCity();
   const { session } = useAuth();
   const [vibe, setVibe] = useState<number | null>(null);
   const [crowd, setCrowd] = useState<number | null>(null);
@@ -151,6 +151,7 @@ export default function ReportScreen() {
 
       <Modal visible={recorderOpen} animationType="slide" onRequestClose={() => setRecorderOpen(false)}>
         <VideoRecorder
+          caption={venues.find((v) => v.id === id)?.name}
           onCancel={() => setRecorderOpen(false)}
           onDone={(v) => {
             setVideo(v);
