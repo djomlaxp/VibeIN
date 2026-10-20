@@ -79,3 +79,5 @@ export type VenueIssue = {
   created_at: string;
   venue: { name: string } | null;
 };
+
+export type WelcomeClip = { slot: number; video_path: string; label: string };

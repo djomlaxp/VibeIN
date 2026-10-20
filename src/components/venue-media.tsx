@@ -43,7 +43,7 @@ function Clip({ path, playing }: { path: string; playing: boolean }) {
     if (playing) player.play();
     else player.pause();
   }, [player, playing]);
-  return <VideoView player={player} style={StyleSheet.absoluteFill} contentFit="cover" nativeControls={false} />;
+  return <VideoView player={player} style={styles.video} contentFit="cover" nativeControls={false} />;
 }
 
 function Glow({ type }: { type: VenueType }) {
@@ -57,6 +57,8 @@ function Glow({ type }: { type: VenueType }) {
 }
 
 const styles = StyleSheet.create({
+  // On web the video element keeps its own size unless told to fill the box
+  video: { position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' },
   box: { overflow: 'hidden', backgroundColor: Colors.background },
   center: { alignItems: 'center', justifyContent: 'center' },
   halo: { position: 'absolute', width: 220, height: 220, borderRadius: 110, backgroundColor: Colors.accent, opacity: 0.08, boxShadow: `0 0 120px 60px ${Colors.accent}22` },
