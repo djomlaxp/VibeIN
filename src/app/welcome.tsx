@@ -11,12 +11,14 @@ import type { IconComponent } from '@/components/icons';
 import { Logo } from '@/components/logo';
 import { Pill } from '@/components/pill';
 import { StrobeLights } from '@/components/strobe-lights';
+import { VenueMap } from '@/components/venue-map';
 import { VenueAvatar } from '@/components/venue-avatar';
 import { Colors, Fonts, Spacing } from '@/constants/theme';
 import { useCity } from '@/lib/city';
+import type { MapMarker } from '@/lib/map-html';
 import { supabase, welcomeClipUrl } from '@/lib/supabase';
 import type { Venue, VenueType, WelcomeClip } from '@/lib/types';
-import { CITY, CROWD_LABELS, VENUE_TYPE_LABELS, VIBE_LABELS, distanceMeters, formatDistance, timeAgo, vibeColor } from '@/lib/vibe';
+import { CROWD_LABELS, VENUE_TYPE_LABELS, VIBE_LABELS, distanceMeters, formatDistance, timeAgo, vibeColor } from '@/lib/vibe';
 
 // Made-up looping example clips (animations, not real people or places) so a
 // new visitor sees what the app looks like before making a profile.
@@ -100,8 +102,9 @@ const hottestFirst = (venues: Venue[], vibes: ReturnType<typeof useCity>['vibes'
 // over a soft club light.
 function LiveNow() {
   const { venues, vibes } = useCity();
-  const live = useMemo(() => hottestFirst(venues, vibes), [venues, vibes]);
-  const shown = (live.length ? live : venues).slice(0, 4);
+  // Stadiums stay on the map but not in these circles (Djomla's call).
+  const live = useMemo(() => hottestFirst(venues, vibes).filter((v) => v.type !== 'stadium'), [venues, vibes]);
+  const shown = (live.length ? live : venues.filter((v) => v.type !== 'stadium')).slice(0, 4);
 
   return (
     <View style={{ flex: 1 }}>
@@ -127,15 +130,39 @@ function LiveNow() {
       <View style={styles.livePill}>
         <View style={styles.liveDot} />
         <Text style={styles.livePillText}>
-          {live.length ? `${live.length} ${live.length === 1 ? 'mesto' : 'mesta'} uživo u Pančevu` : `${CITY} izlazi večeras`}
+          {live.length ? `${live.length} ${live.length === 1 ? 'mesto' : 'mesta'} uživo` : 'Večeras se izlazi'}
         </Text>
       </View>
       <Text style={[styles.headline, { marginTop: Spacing.four }]}>
         Gde <Text style={{ color: Colors.accent }}>gori</Text>
         {'\n'}večeras?
       </Text>
-      <Text style={styles.body}>Vidi uživo kakva je atmosfera u klubovima, kafićima i na stadionima, pre nego što izađeš.</Text>
+      <Text style={styles.body}>Vidi uživo kakva je atmosfera u klubovima, kafićima i na koncertima, pre nego što izađeš.</Text>
+      <CityMap />
     </View>
+  );
+}
+
+// The app's map with the venues that are live now and their scores (all
+// venues when none is). Only a preview here: it does
+// not move under the finger (that would fight the page swipe), and a tap asks
+// the visitor to make a profile.
+function CityMap() {
+  const { venues, vibes } = useCity();
+  const markers = useMemo<MapMarker[]>(() => {
+    const live = venues.filter((v) => vibes[v.id]?.report_count);
+    return (live.length ? live : venues).map((v) => {
+      const score = vibes[v.id]?.vibe_score ?? null;
+      return { id: v.id, name: v.name, lat: v.lat, lng: v.lng, score: score == null ? null : Number(score), color: vibeColor(score) };
+    });
+  }, [venues, vibes]);
+  if (!markers.length) return null;
+  return (
+    <Pressable style={styles.map} onPress={() => router.push({ pathname: '/login', params: { mode: 'signup' } })} aria-label="Mapa mesta">
+      <View pointerEvents="none" style={{ flex: 1 }}>
+        <VenueMap markers={markers} onSelect={() => {}} />
+      </View>
+    </Pressable>
   );
 }
 
@@ -225,7 +252,8 @@ function Examples({ width, active }: { width: number; active: boolean }) {
           ))}
         </View>
       </View>
-      <Text style={styles.note}>Ovo su primeri. Pravi snimci iz Pančeva te čekaju unutra.</Text>
+      <Text style={styles.free}>Besplatno</Text>
+      <Text style={styles.note}>Ovo su primeri. Pravi snimci te čekaju unutra.</Text>
     </View>
   );
 }
@@ -322,7 +350,9 @@ const styles = StyleSheet.create({
   tileScore: { color: Colors.text, fontFamily: Fonts.displayBold, fontSize: 14 },
   tileLabel: { color: Colors.text, fontFamily: Fonts.bodyBold, fontSize: 12 },
   tileSmall: { color: Colors.textSecondary, fontFamily: Fonts.body, fontSize: 10 },
-  note: { color: Colors.textSecondary, fontFamily: Fonts.body, fontSize: 12, textAlign: 'center', marginTop: Spacing.three },
+  map: { height: 220, marginTop: Spacing.four, borderRadius: 20, overflow: 'hidden', borderWidth: 1, borderColor: Colors.backgroundSelected, backgroundColor: Colors.background },
+  free: { color: Colors.accent, fontFamily: Fonts.display, fontSize: 40, lineHeight: 48, textAlign: 'center', marginTop: Spacing.four, textShadowColor: `${Colors.accent}88`, textShadowRadius: 24 },
+  note: { color: Colors.textSecondary, fontFamily: Fonts.body, fontSize: 12, textAlign: 'center', marginTop: Spacing.two },
   dots: { flexDirection: 'row', justifyContent: 'center', gap: 8, paddingVertical: Spacing.three },
   dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: Colors.backgroundSelected },
   dotActive: { width: 22, backgroundColor: Colors.accent },
