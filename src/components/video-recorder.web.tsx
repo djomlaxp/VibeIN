@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { Colors, Fonts } from '@/constants/theme';
+import { Asset } from 'expo-asset';
+
+import { Logo, LOGO, LOGO_ASPECT } from '@/components/logo';
+import { Fonts } from '@/constants/theme';
 import { SITE_LABEL } from '@/lib/share';
 import { MAX_VIDEO_SECONDS } from '@/lib/vibe';
 
@@ -19,6 +22,15 @@ function supportedMimeType() {
 
 // The VibeIN mark burned into the corner of every clip, so a clip shared to
 // Instagram or forwarded still shows where it came from.
+let logoImage: HTMLImageElement | null = null;
+function loadLogo() {
+  if (!logoImage) {
+    logoImage = new window.Image();
+    logoImage.src = Asset.fromModule(LOGO).uri;
+  }
+  return logoImage;
+}
+
 function drawWatermark(ctx: CanvasRenderingContext2D, w: number, h: number, caption?: string) {
   const unit = Math.min(w, h);
   const margin = unit * 0.045;
@@ -30,11 +42,9 @@ function drawWatermark(ctx: CanvasRenderingContext2D, w: number, h: number, capt
   ctx.textBaseline = 'top';
   // Top left, clear of the reply bar Instagram and WhatsApp put at the bottom
   let y = margin;
-  ctx.font = `${big}px ${Fonts.display}, sans-serif`;
-  ctx.fillStyle = '#FFFFFF';
-  ctx.fillText('Vibe', margin, y);
-  ctx.fillStyle = Colors.accent;
-  ctx.fillText('IN', margin + ctx.measureText('Vibe').width, y);
+  const logo = loadLogo();
+  const logoHeight = big * 1.1;
+  if (logo.complete && logo.naturalWidth) ctx.drawImage(logo, margin, y, logoHeight * LOGO_ASPECT, logoHeight);
   y += big * 1.25;
   ctx.font = `${small}px ${Fonts.bodyBold}, sans-serif`;
   ctx.fillStyle = '#FFFFFF';
@@ -63,6 +73,7 @@ export function VideoRecorder({ onDone, onCancel, caption }: { onDone: (v: Recor
 
   useEffect(() => {
     if (!mimeType) return;
+    loadLogo();
     let cancelled = false;
     navigator.mediaDevices
       ?.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }, audio: true })
@@ -150,9 +161,7 @@ export function VideoRecorder({ onDone, onCancel, caption }: { onDone: (v: Recor
       <video ref={preview} autoPlay muted playsInline style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
       {/* Shows where the mark will be in the saved clip */}
       <View style={styles.mark} pointerEvents="none">
-        <Text style={styles.markLogo}>
-          Vibe<Text style={{ color: Colors.accent }}>IN</Text>
-        </Text>
+        <Logo height={27} />
         {!!caption && <Text style={styles.markText}>{caption}</Text>}
         <Text style={styles.markText}>{SITE_LABEL}</Text>
       </View>
@@ -175,7 +184,6 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16, padding: 24, backgroundColor: '#000' },
   mark: { position: 'absolute', left: 16, top: 48 },
-  markLogo: { color: '#fff', fontFamily: Fonts.display, fontSize: 24, textShadowColor: 'rgba(0,0,0,0.7)', textShadowRadius: 6 },
   markText: { color: '#fff', fontFamily: Fonts.bodyBold, fontSize: 12, textShadowColor: 'rgba(0,0,0,0.7)', textShadowRadius: 6 },
   controls: { position: 'absolute', bottom: 40, left: 0, right: 0, alignItems: 'center', gap: 16 },
   timer: { color: '#fff', fontSize: 16, fontVariant: ['tabular-nums'] },
