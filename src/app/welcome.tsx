@@ -18,7 +18,7 @@ import { useCity } from '@/lib/city';
 import type { MapMarker } from '@/lib/map-html';
 import { supabase, welcomeClipUrl } from '@/lib/supabase';
 import type { Venue, VenueType, WelcomeClip } from '@/lib/types';
-import { CITY, CROWD_LABELS, VENUE_TYPE_LABELS, VIBE_LABELS, distanceMeters, formatDistance, timeAgo, vibeColor } from '@/lib/vibe';
+import { CROWD_LABELS, VENUE_TYPE_LABELS, VIBE_LABELS, distanceMeters, formatDistance, timeAgo, vibeColor } from '@/lib/vibe';
 
 // Made-up looping example clips (animations, not real people or places) so a
 // new visitor sees what the app looks like before making a profile.
@@ -102,8 +102,9 @@ const hottestFirst = (venues: Venue[], vibes: ReturnType<typeof useCity>['vibes'
 // over a soft club light.
 function LiveNow() {
   const { venues, vibes } = useCity();
-  const live = useMemo(() => hottestFirst(venues, vibes), [venues, vibes]);
-  const shown = (live.length ? live : venues).slice(0, 4);
+  // Stadiums stay on the map but not in these circles (Djomla's call).
+  const live = useMemo(() => hottestFirst(venues, vibes).filter((v) => v.type !== 'stadium'), [venues, vibes]);
+  const shown = (live.length ? live : venues.filter((v) => v.type !== 'stadium')).slice(0, 4);
 
   return (
     <View style={{ flex: 1 }}>
@@ -129,14 +130,14 @@ function LiveNow() {
       <View style={styles.livePill}>
         <View style={styles.liveDot} />
         <Text style={styles.livePillText}>
-          {live.length ? `${live.length} ${live.length === 1 ? 'mesto' : 'mesta'} uživo u Pančevu` : `${CITY} izlazi večeras`}
+          {live.length ? `${live.length} ${live.length === 1 ? 'mesto' : 'mesta'} uživo` : 'Večeras se izlazi'}
         </Text>
       </View>
       <Text style={[styles.headline, { marginTop: Spacing.four }]}>
         Gde <Text style={{ color: Colors.accent }}>gori</Text>
         {'\n'}večeras?
       </Text>
-      <Text style={styles.body}>Vidi uživo kakva je atmosfera u klubovima, kafićima i na stadionima, pre nego što izađeš.</Text>
+      <Text style={styles.body}>Vidi uživo kakva je atmosfera u klubovima, kafićima i na koncertima, pre nego što izađeš.</Text>
       <CityMap />
     </View>
   );
@@ -252,7 +253,7 @@ function Examples({ width, active }: { width: number; active: boolean }) {
         </View>
       </View>
       <Text style={styles.free}>Besplatno</Text>
-      <Text style={styles.note}>Ovo su primeri. Pravi snimci iz Pančeva te čekaju unutra.</Text>
+      <Text style={styles.note}>Ovo su primeri. Pravi snimci te čekaju unutra.</Text>
     </View>
   );
 }
