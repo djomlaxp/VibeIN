@@ -65,7 +65,7 @@ function RootStack() {
         <Stack.Screen name="issue/[id]" options={{ title: 'Javi promenu', presentation: 'modal' }} />
         <Stack.Screen name="edit/[id]" options={{ title: 'Uredi profil mesta' }} />
         <Stack.Screen name="post/[id]" options={{ title: 'Nova objava', presentation: 'modal' }} />
-        <Stack.Screen name="admin" options={{ title: 'Admin' }} />
+        <Stack.Screen name="admin" options={{ title: 'Admin panel' }} />
         <Stack.Screen name="notifications" options={{ title: 'Obaveštenja' }} />
       </Stack.Protected>
       <Stack.Protected guard={!session} redirectTo="/">
