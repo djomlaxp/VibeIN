@@ -11,11 +11,10 @@ import type { IconComponent } from '@/components/icons';
 import { Logo } from '@/components/logo';
 import { Pill } from '@/components/pill';
 import { VenueAvatar } from '@/components/venue-avatar';
-import { VibeBadge } from '@/components/vibe-badge';
 import { Colors, Fonts, Spacing } from '@/constants/theme';
 import { useCity } from '@/lib/city';
-import type { VenueType } from '@/lib/types';
-import { CITY, CROWD_LABELS, VENUE_TYPE_LABELS, VIBE_LABELS, timeAgo } from '@/lib/vibe';
+import type { Venue, VenueType } from '@/lib/types';
+import { CITY, CROWD_LABELS, VENUE_TYPE_LABELS, VIBE_LABELS, distanceMeters, formatDistance, timeAgo, vibeColor } from '@/lib/vibe';
 
 // Made-up looping example clips (animations, not real people or places) so a
 // new visitor sees what the app looks like before making a profile.
@@ -59,7 +58,7 @@ export default function Welcome() {
             onScroll={(e) => setPage(Math.round(e.nativeEvent.contentOffset.x / width))}
             style={{ flex: 1 }}>
             <ScrollView style={{ width }} contentContainerStyle={styles.slide} showsVerticalScrollIndicator={false}>
-              <LiveNow />
+              <LiveNow width={width} />
             </ScrollView>
             <ScrollView style={{ width }} contentContainerStyle={styles.slide} showsVerticalScrollIndicator={false}>
               <WhatYouGet />
@@ -91,33 +90,43 @@ export default function Welcome() {
   );
 }
 
-// Page 1: the places that are live right now, straight from the database.
-function LiveNow() {
+const hottestFirst = (venues: Venue[], vibes: ReturnType<typeof useCity>['vibes']) =>
+  venues.filter((v) => vibes[v.id]?.report_count).sort((a, b) => (vibes[b.id].vibe_score ?? 0) - (vibes[a.id].vibe_score ?? 0));
+
+// Page 1: the places that are live right now, straight from the database,
+// over a soft club light.
+function LiveNow({ width }: { width: number }) {
   const { venues, vibes } = useCity();
-  const live = useMemo(
-    () => venues.filter((v) => vibes[v.id]?.report_count).sort((a, b) => (vibes[b.id].vibe_score ?? 0) - (vibes[a.id].vibe_score ?? 0)),
-    [venues, vibes],
-  );
-  const shown = (live.length ? live : venues).slice(0, 5);
+  const live = useMemo(() => hottestFirst(venues, vibes), [venues, vibes]);
+  const shown = (live.length ? live : venues).slice(0, 4);
 
   return (
     <View style={{ flex: 1 }}>
-      <Glow color={Colors.accent} style={{ top: -80, left: -90 }} />
-      <Glow color="#2FD3E0" style={{ top: 140, right: -120 }} />
+      <Image source={require('@/assets/welcome/hero.jpg')} style={[styles.hero, { width, height: Math.round((width * 640) / 420) }]} contentFit="cover" />
       <Logo />
       <View style={styles.stories}>
-        {shown.map((v) => (
-          <View key={v.id} style={styles.story}>
-            <VenueAvatar type={v.type} size={60} live={!!vibes[v.id]?.report_count} />
-            <Text style={styles.storyName} numberOfLines={1}>
-              {v.name}
-            </Text>
-          </View>
-        ))}
+        {shown.map((v) => {
+          const score = vibes[v.id]?.vibe_score ?? null;
+          return (
+            <View key={v.id} style={styles.story}>
+              <VenueAvatar type={v.type} size={64} live={!!vibes[v.id]?.report_count} />
+              {score != null && (
+                <View style={[styles.scoreChip, { backgroundColor: vibeColor(score) }]}>
+                  <Text style={styles.scoreChipText}>{Number(score).toFixed(1)}</Text>
+                </View>
+              )}
+              <Text style={[styles.storyName, score == null && { marginTop: 6 }]} numberOfLines={1}>
+                {v.name}
+              </Text>
+            </View>
+          );
+        })}
       </View>
-      <View style={{ flex: 1, minHeight: Spacing.four }} />
-      <View style={{ flexDirection: 'row' }}>
-        <Pill live label={live.length ? `${live.length} ${live.length === 1 ? 'mesto' : 'mesta'} uživo u Pančevu` : `${CITY} izlazi večeras`} />
+      <View style={styles.livePill}>
+        <View style={styles.liveDot} />
+        <Text style={styles.livePillText}>
+          {live.length ? `${live.length} ${live.length === 1 ? 'mesto' : 'mesta'} uživo u Pančevu` : `${CITY} izlazi večeras`}
+        </Text>
       </View>
       <Text style={[styles.headline, { marginTop: Spacing.four }]}>
         Gde <Text style={{ color: Colors.accent }}>gori</Text>
@@ -130,33 +139,36 @@ function LiveNow() {
 
 // Page 2: an example venue card and the three things the app does.
 function WhatYouGet() {
-  const { venues, vibes } = useCity();
-  const hottest = venues
-    .filter((v) => vibes[v.id]?.report_count)
-    .sort((a, b) => (vibes[b.id].vibe_score ?? 0) - (vibes[a.id].vibe_score ?? 0))[0];
+  const { venues, vibes, position } = useCity();
+  const hottest = hottestFirst(venues, vibes)[0];
   const vibe = hottest ? vibes[hottest.id] : null;
   const score = vibe?.vibe_score ?? 4.7;
   const crowd = vibe?.crowd ?? 3;
   const type: VenueType = hottest?.type ?? 'cafe';
+  const meta = [
+    VENUE_TYPE_LABELS[type],
+    hottest ? (position ? formatDistance(distanceMeters(position, hottest)) : null) : '180 m',
+    vibe?.last_report_at ? timeAgo(vibe.last_report_at) : 'pre 3 min',
+  ].filter(Boolean);
 
   return (
     <View style={{ flex: 1 }}>
-      <LinearGradient colors={[Colors.backgroundSelected, Colors.background]} start={{ x: 0, y: 0 }} end={{ x: 0.6, y: 1 }} style={styles.exampleCard}>
-        <Glow color={Colors.accent} size={200} style={{ top: 10, left: 70, opacity: 0.12 }} />
+      <View style={styles.exampleCard}>
+        <Image source={require('@/assets/welcome/card.jpg')} style={StyleSheet.absoluteFill} contentFit="cover" />
         <View style={styles.cardTop}>
           <Pill live label="UŽIVO" />
-          <VibeBadge score={score} />
+          <View style={[styles.bigRing, { borderColor: vibeColor(score), boxShadow: `0 0 18px ${vibeColor(score)}66` }]}>
+            <Text style={styles.bigRingText}>{Number(score).toFixed(1)}</Text>
+          </View>
         </View>
         <View>
           <View style={styles.cardVenue}>
-            <VenueAvatar type={type} size={40} live />
+            <VenueAvatar type={type} size={44} live />
             <View style={{ flexShrink: 1 }}>
               <Text style={styles.cardName} numberOfLines={1}>
                 {hottest?.name ?? 'Kafić u centru'}
               </Text>
-              <Text style={styles.cardMeta}>
-                {VENUE_TYPE_LABELS[type]} · {vibe?.last_report_at ? timeAgo(vibe.last_report_at) : 'pre 3 min'}
-              </Text>
+              <Text style={styles.cardMeta}>{meta.join(' · ')}</Text>
             </View>
           </View>
           <View style={styles.pills}>
@@ -164,8 +176,11 @@ function WhatYouGet() {
             <Pill icon={Users} label={CROWD_LABELS[crowd]} />
           </View>
         </View>
-      </LinearGradient>
-      <Text style={[styles.headline, styles.headlineSmall]}>
+      </View>
+      <View style={{ marginTop: Spacing.four }}>
+        <Logo />
+      </View>
+      <Text style={[styles.headline, styles.headlineSmall, { marginTop: Spacing.one }]}>
         Izađi tamo gde je <Text style={{ color: Colors.accent }}>dobra atmosfera</Text>
       </Text>
       <View style={{ gap: Spacing.two, marginTop: Spacing.three }}>
@@ -251,30 +266,28 @@ function ExampleClip({ example: e, width, height, active, big }: { example: Exam
   );
 }
 
-// A soft blurred light, like a stage light in the dark.
-function Glow({ color, size = 300, style }: { color: string; size?: number; style: object }) {
-  const core = size / 3;
-  return (
-    <View pointerEvents="none" style={[{ position: 'absolute', width: size, height: size, alignItems: 'center', justifyContent: 'center', opacity: 0.2 }, style]}>
-      <View style={{ width: core, height: core, borderRadius: core, backgroundColor: color, boxShadow: `0 0 ${core * 1.4}px ${core * 0.6}px ${color}` }} />
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   // On web the video element keeps its own size unless told to fill the box
   video: { position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' },
   screen: { flex: 1, backgroundColor: Colors.background, alignItems: 'center' },
   column: { flex: 1, width: '100%', maxWidth: 520, overflow: 'hidden' },
   slide: { flexGrow: 1, paddingHorizontal: Spacing.four, paddingTop: Spacing.four, overflow: 'hidden' },
-  stories: { flexDirection: 'row', gap: Spacing.three, marginTop: Spacing.five },
-  story: { width: 60, alignItems: 'center', gap: 4 },
-  storyName: { color: Colors.text, fontFamily: Fonts.body, fontSize: 11, maxWidth: 64 },
+  hero: { position: 'absolute', top: -Spacing.four, left: -Spacing.four },
+  stories: { flexDirection: 'row', justifyContent: 'space-between', marginTop: Spacing.five, maxWidth: 360 },
+  story: { width: 74, alignItems: 'center' },
+  scoreChip: { marginTop: -10, borderRadius: 6, borderWidth: 2, borderColor: Colors.background, paddingHorizontal: 5 },
+  scoreChipText: { color: '#fff', fontFamily: Fonts.bodyBold, fontSize: 11 },
+  storyName: { color: Colors.text, fontFamily: Fonts.body, fontSize: 11, marginTop: 3, maxWidth: 74 },
+  livePill: { flexDirection: 'row', alignSelf: 'flex-start', alignItems: 'center', gap: 8, marginTop: Spacing.four, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, backgroundColor: 'rgba(22,32,28,0.85)' },
+  liveDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: Colors.accent, boxShadow: `0 0 10px ${Colors.accent}` },
+  livePillText: { color: Colors.text, fontFamily: Fonts.bodyBold, fontSize: 13 },
   headline: { color: Colors.text, fontFamily: Fonts.display, fontSize: 34, lineHeight: 40 },
   headlineSmall: { fontSize: 24, lineHeight: 30, marginTop: Spacing.four },
   body: { color: Colors.textSecondary, fontFamily: Fonts.body, fontSize: 16, lineHeight: 23, marginTop: Spacing.three },
-  exampleCard: { height: 220, borderRadius: 24, padding: Spacing.three, justifyContent: 'space-between', overflow: 'hidden' },
+  exampleCard: { height: 200, borderRadius: 24, padding: Spacing.three, justifyContent: 'space-between', overflow: 'hidden' },
   cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+  bigRing: { width: 64, height: 64, borderRadius: 32, borderWidth: 4, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.backgroundElement },
+  bigRingText: { color: Colors.text, fontFamily: Fonts.displayBold, fontSize: 18 },
   cardVenue: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   cardName: { color: Colors.text, fontFamily: Fonts.bodyBold, fontSize: 16 },
   cardMeta: { color: Colors.textSecondary, fontFamily: Fonts.body, fontSize: 12 },
