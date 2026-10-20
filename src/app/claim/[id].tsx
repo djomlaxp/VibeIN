@@ -1,19 +1,20 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Choice, Field, SubmitButton, formStyles } from '@/components/form';
+import { VideoRecorder, type RecordedVideo } from '@/components/video-recorder';
 import { Fonts, Spacing, useColors } from '@/constants/theme';
 import { useAuth } from '@/lib/auth';
-import { CLAIM_METHODS, hasSecretCode, type ClaimMethod } from '@/lib/claims';
+import { CLAIM_METHODS, claimMethodInfo, hasSecretCode, type ClaimMethod } from '@/lib/claims';
 import { CLAIM_DOCS_BUCKET, supabase } from '@/lib/supabase';
+import type { Venue } from '@/lib/types';
 import { errorMessage } from '@/lib/vibe';
 
 type PendingClaim = {
   id: string;
-  method: ClaimMethod | null;
+  method: string | null;
   venue_link: string | null;
-  code: string | null;
   secret_confirmed: boolean;
 };
 
@@ -28,18 +29,22 @@ function pickDocument(): Promise<File | null> {
   });
 }
 
-// A person asks to manage a venue and proves it is theirs in one of several
-// ways; an admin checks the proof and approves. While the request waits, this
-// screen shows the code and what to do with it.
+// A person asks to manage a venue and proves it is theirs the way the big
+// services do: a code sent to the venue's phone, email or address, a video
+// filmed on the spot, or a document. An admin checks it and approves. While
+// the request waits, this screen says what happens next and takes the code.
 export default function ClaimScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const colors = useColors();
   const { session } = useAuth();
+  const [venue, setVenue] = useState<Pick<Venue, 'name' | 'address' | 'contact'> | null>(null);
   const [claim, setClaim] = useState<PendingClaim | null | undefined>(undefined);
-  const [method, setMethod] = useState<ClaimMethod>('instagram');
+  const [method, setMethod] = useState<ClaimMethod>('phone');
   const [link, setLink] = useState('');
   const [note, setNote] = useState('');
   const [file, setFile] = useState<File | null>(null);
+  const [video, setVideo] = useState<RecordedVideo | null>(null);
+  const [recorderOpen, setRecorderOpen] = useState(false);
   const [code, setCode] = useState('');
   const [codeResult, setCodeResult] = useState<boolean | null>(null);
   const [busy, setBusy] = useState(false);
@@ -47,13 +52,17 @@ export default function ClaimScreen() {
 
   const load = useCallback(async () => {
     if (!session) return;
-    const { data } = await supabase
-      .from('venue_claims')
-      .select('id, method, venue_link, code, secret_confirmed')
-      .eq('venue_id', id)
-      .eq('user_id', session.user.id)
-      .eq('status', 'pending')
-      .maybeSingle();
+    const [{ data: venueRow }, { data }] = await Promise.all([
+      supabase.from('venues').select('name, address, contact').eq('id', id).maybeSingle(),
+      supabase
+        .from('venue_claims')
+        .select('id, method, venue_link, secret_confirmed')
+        .eq('venue_id', id)
+        .eq('user_id', session.user.id)
+        .eq('status', 'pending')
+        .maybeSingle(),
+    ]);
+    setVenue(venueRow);
     setClaim((data as PendingClaim | null) ?? null);
   }, [id, session]);
 
@@ -61,29 +70,44 @@ export default function ClaimScreen() {
     load();
   }, [load]);
 
-  const info = CLAIM_METHODS[method];
-  const ready = method === 'document' ? !!file : !info.link || link.trim().length >= 3;
+  // The venue's phone and address already in the app are used as they are
+  const knownPhone = venue?.contact?.phone?.trim() || null;
+  const knownAddress = venue?.address?.trim() || null;
+  const known = method === 'phone' ? knownPhone : method === 'postcard' ? knownAddress : null;
+  const askLink = (method === 'phone' || method === 'email' || method === 'postcard') && !known;
+  const ready = method === 'document' ? !!file : method === 'video' ? !!video : !askLink || link.trim().length >= 3;
+
+  async function upload(body: Blob | ArrayBuffer, ext: string, contentType: string) {
+    const path = `${session!.user.id}/${Date.now()}.${ext}`;
+    const { error: uploadError } = await supabase.storage.from(CLAIM_DOCS_BUCKET).upload(path, body, { contentType });
+    return uploadError ? null : path;
+  }
 
   async function send() {
     if (!session) return router.replace('/login');
     setBusy(true);
     setError(null);
-    let documentPath: string | null = null;
+    let filePath: string | null = null;
     if (method === 'document' && file) {
-      const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
-      documentPath = `${session.user.id}/${Date.now()}.${ext}`;
-      const { error: uploadError } = await supabase.storage.from(CLAIM_DOCS_BUCKET).upload(documentPath, file, { contentType: file.type });
-      if (uploadError) {
+      filePath = await upload(file, file.name.split('.').pop()?.toLowerCase() || 'jpg', file.type);
+      if (!filePath) {
         setBusy(false);
-        return setError('Dokument nije poslat, pokušaj ponovo. Najviše 10 MB, slika ili PDF.');
+        return setError('Dokument nije poslat, pokušaj ponovo. Slika ili PDF, najviše 50 MB.');
+      }
+    }
+    if (method === 'video' && video) {
+      filePath = await upload(await (await fetch(video.uri)).arrayBuffer(), 'mp4', 'video/mp4');
+      if (!filePath) {
+        setBusy(false);
+        return setError('Video nije poslat, pokušaj ponovo.');
       }
     }
     const { error: rpcError } = await supabase.rpc('create_venue_claim', {
       p_venue_id: id,
       p_method: method,
-      p_venue_link: info.link ? link.trim() : null,
+      p_venue_link: askLink ? link.trim() : null,
       p_note: note.trim() || null,
-      p_document_path: documentPath,
+      p_document_path: filePath,
     });
     setBusy(false);
     if (rpcError) return setError(errorMessage(rpcError));
@@ -113,44 +137,30 @@ export default function ClaimScreen() {
   }
 
   if (claim) {
-    const m = claim.method ? CLAIM_METHODS[claim.method] : null;
+    const m = claimMethodInfo(claim.method);
     return (
       <ScrollView style={{ backgroundColor: colors.background }} contentContainerStyle={formStyles.content}>
         <Text style={[styles.title, text]}>Zahtev je poslat</Text>
-        {m ? (
-          <>
-            <Text style={[styles.body, text]}>{m.howTo(claim.code, claim.venue_link)}</Text>
-            {claim.code && (
-              <View style={[styles.codeBox, { backgroundColor: colors.backgroundElement }]}>
-                <Text style={[styles.codeLabel, { color: colors.textSecondary }]}>Tvoj kod</Text>
-                <Text style={[styles.code, { color: colors.accent }]} selectable>
-                  {claim.code}
-                </Text>
-              </View>
-            )}
-            {hasSecretCode(claim.method) &&
-              (claim.secret_confirmed ? (
-                <Text style={[styles.body, { color: colors.accent }]}>Kod je tačan. Odobrićemo zahtev uskoro.</Text>
-              ) : (
-                <>
-                  <Field
-                    label="Kod koji si dobio"
-                    placeholder="6 cifara"
-                    value={code}
-                    onChangeText={(v) => {
-                      setCode(v.replace(/\D/g, '').slice(0, 6));
-                      setCodeResult(null);
-                    }}
-                    keyboardType="number-pad"
-                  />
-                  {codeResult === false && <Text style={formStyles.error}>Kod nije tačan, proveri i pokušaj ponovo.</Text>}
-                  <SubmitButton title="Potvrdi kod" onPress={confirm} busy={busy} disabled={code.length !== 6} />
-                </>
-              ))}
-          </>
-        ) : (
-          <Text style={[styles.body, text]}>Proverićemo podatke koje si poslao i javiti ti.</Text>
-        )}
+        <Text style={[styles.body, text]}>{m ? m.howTo(claim.venue_link) : 'Proverićemo podatke koje si poslao i javiti ti.'}</Text>
+        {hasSecretCode(claim.method) &&
+          (claim.secret_confirmed ? (
+            <Text style={[styles.body, { color: colors.accent }]}>Kod je tačan. Odobrićemo zahtev uskoro.</Text>
+          ) : (
+            <>
+              <Field
+                label="Kod koji si dobio"
+                placeholder="6 cifara"
+                value={code}
+                onChangeText={(v) => {
+                  setCode(v.replace(/\D/g, '').slice(0, 6));
+                  setCodeResult(null);
+                }}
+                keyboardType="number-pad"
+              />
+              {codeResult === false && <Text style={formStyles.error}>Kod nije tačan, proveri i pokušaj ponovo.</Text>}
+              <SubmitButton title="Potvrdi kod" onPress={confirm} busy={busy} disabled={code.length !== 6} />
+            </>
+          ))}
         {error && <Text style={formStyles.error}>{error}</Text>}
         <Text style={formStyles.hint}>Kad odobrimo zahtev, na stranici mesta pojaviće ti se dugmad za uređivanje i objave.</Text>
       </ScrollView>
@@ -173,9 +183,33 @@ export default function ClaimScreen() {
           setError(null);
         }}
       />
-      <Text style={formStyles.hint}>{METHOD_HINTS[method]}</Text>
-      {info.link && (
-        <Field label={info.link.label} placeholder={info.link.placeholder} value={link} onChangeText={setLink} autoCapitalize="none" />
+      <Text style={formStyles.hint}>{CLAIM_METHODS[method].hint}</Text>
+      {known && (
+        <View style={[styles.known, { backgroundColor: colors.backgroundElement }]}>
+          <Text style={[styles.knownLabel, { color: colors.textSecondary }]}>
+            {method === 'phone' ? 'Zovemo broj' : 'Šaljemo na adresu'}
+          </Text>
+          <Text style={[styles.body, text]}>{known}</Text>
+        </View>
+      )}
+      {askLink && (
+        <Field
+          label={method === 'phone' ? 'Javni broj telefona lokala' : method === 'email' ? 'Imejl lokala' : 'Adresa lokala'}
+          placeholder={
+            method === 'phone' ? 'Broj sa Google-a, menija ili ulaza' : method === 'email' ? 'info@imelokala.rs' : 'Ulica i broj, grad'
+          }
+          value={link}
+          onChangeText={setLink}
+          autoCapitalize="none"
+          keyboardType={method === 'phone' ? 'phone-pad' : method === 'email' ? 'email-address' : 'default'}
+        />
+      )}
+      {method === 'video' && (
+        <Pressable
+          onPress={() => (video ? setVideo(null) : setRecorderOpen(true))}
+          style={[styles.pick, { backgroundColor: colors.backgroundElement }]}>
+          <Text style={[styles.pickText, text]}>{video ? `Video ${video.durationS} s (snimi ponovo)` : 'Snimi video'}</Text>
+        </Pressable>
       )}
       {method === 'document' &&
         (Platform.OS === 'web' ? (
@@ -198,29 +232,27 @@ export default function ClaimScreen() {
       />
       {error && <Text style={formStyles.error}>{error}</Text>}
       <SubmitButton title="Pošalji zahtev" onPress={send} busy={busy} disabled={!ready} />
+
+      <Modal visible={recorderOpen} animationType="slide" onRequestClose={() => setRecorderOpen(false)}>
+        <VideoRecorder
+          caption={venue?.name}
+          onCancel={() => setRecorderOpen(false)}
+          onDone={(v) => {
+            setVideo(v);
+            setRecorderOpen(false);
+          }}
+        />
+      </Modal>
     </ScrollView>
   );
 }
-
-// What each way of proving involves, shown before sending
-const METHOD_HINTS: Record<ClaimMethod, string> = {
-  instagram: 'Dobićeš kod koji staviš u opis ili story Instagram profila lokala. Samo vlasnik profila to može.',
-  facebook: 'Dobićeš kod koji objaviš na Facebook stranici lokala. Samo onaj ko upravlja stranicom to može.',
-  website: 'Dobićeš kod koji staviš na sajt lokala.',
-  phone: 'Pozvaćemo javni broj lokala i reći kod. Ti ga posle upišeš ovde.',
-  email: 'Poslaćemo kod na zvanični imejl lokala. Ti ga posle upišeš ovde.',
-  document:
-    'Pošalji sliku ili PDF rešenja iz APR-a, ugovora o zakupu ili računa za struju na ime lokala ili firme. Dokument vidi samo administrator.',
-  visit: 'Doći ćemo u lokal, a ti nam pokažeš kod iz aplikacije. Najsporiji način.',
-};
 
 const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   title: { fontFamily: Fonts.displayBold, fontSize: 22 },
   body: { fontFamily: Fonts.body, fontSize: 16, lineHeight: 23 },
-  codeBox: { alignItems: 'center', padding: Spacing.four, borderRadius: 16, gap: Spacing.one },
-  codeLabel: { fontFamily: Fonts.bodyBold, fontSize: 13 },
-  code: { fontFamily: Fonts.display, fontSize: 40, letterSpacing: 6 },
+  known: { padding: Spacing.three, borderRadius: 12, gap: 2 },
+  knownLabel: { fontFamily: Fonts.bodyBold, fontSize: 13 },
   pick: { padding: Spacing.three, borderRadius: 12, alignItems: 'center' },
   pickText: { fontFamily: Fonts.bodyBold, fontSize: 15 },
 });

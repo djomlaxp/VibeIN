@@ -1,5 +1,3 @@
-import type { ClaimMethod } from '@/lib/claims';
-
 export type VenueType = 'club' | 'cafe' | 'restaurant' | 'concert_venue' | 'stadium';
 
 export type Venue = {
@@ -70,7 +68,7 @@ export type VenueClaim = {
   venue_name: string;
   venue_contact: { phone?: string | null; instagram?: string | null; website?: string | null } | null;
   proof: string | null;
-  method: ClaimMethod | null;
+  method: string | null;
   venue_link: string | null;
   code: string | null;
   secret_code: string | null;
