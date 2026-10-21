@@ -1,10 +1,11 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Choice, Field, SubmitButton, formStyles } from '@/components/form';
 import { Fonts, Spacing, useColors } from '@/constants/theme';
-import { APP_EMAIL } from '@/lib/app-info';
+import { FacebookIcon, InstagramIcon } from '@/components/social-icons';
+import { APP_EMAIL, APP_FACEBOOK_URL, APP_INSTAGRAM_URL } from '@/lib/app-info';
 import { useAuth } from '@/lib/auth';
 import { CLAIM_METHODS, claimMethodInfo, hasSecretCode, type ClaimMethod } from '@/lib/claims';
 import { CLAIM_DOCS_BUCKET, supabase } from '@/lib/supabase';
@@ -141,6 +142,18 @@ export default function ClaimScreen() {
             </Text>
           </View>
         )}
+        {(claim.method === 'instagram' || claim.method === 'facebook') && (
+          <Pressable
+            onPress={() => Linking.openURL(claim.method === 'instagram' ? APP_INSTAGRAM_URL : APP_FACEBOOK_URL)}
+            style={[styles.pick, styles.social, { backgroundColor: colors.backgroundElement }]}>
+            {claim.method === 'instagram' ? (
+              <InstagramIcon size={20} color={colors.text} />
+            ) : (
+              <FacebookIcon size={20} color={colors.text} />
+            )}
+            <Text style={[styles.pickText, text]}>Otvori VibeIN profil</Text>
+          </Pressable>
+        )}
         {hasSecretCode(claim.method) &&
           (claim.secret_confirmed ? (
             <Text style={[styles.body, { color: colors.accent }]}>Kod je tačan. Odobrićemo zahtev uskoro.</Text>
@@ -243,4 +256,5 @@ const styles = StyleSheet.create({
   knownLabel: { fontFamily: Fonts.bodyBold, fontSize: 13 },
   pick: { padding: Spacing.three, borderRadius: 12, alignItems: 'center' },
   pickText: { fontFamily: Fonts.bodyBold, fontSize: 15 },
+  social: { flexDirection: 'row', justifyContent: 'center', gap: Spacing.two },
 });
