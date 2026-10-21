@@ -1,9 +1,11 @@
 import { router, type Href } from 'expo-router';
-import { AtSign, Bell, ChevronRight, LogOut, Mail, ShieldCheck, Store, UserRound, type LucideIcon } from 'lucide-react-native';
+import { Bell, ChevronRight, LogOut, Mail, ShieldCheck, Store, UserRound } from 'lucide-react-native';
 import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Fonts, Spacing, useColors } from '@/constants/theme';
-import { APP_EMAIL, APP_INSTAGRAM } from '@/lib/app-info';
+import type { IconComponent } from '@/components/icons';
+import { FacebookIcon, InstagramIcon } from '@/components/social-icons';
+import { APP_EMAIL, APP_FACEBOOK_URL, APP_INSTAGRAM, APP_INSTAGRAM_URL } from '@/lib/app-info';
 import { useAuth } from '@/lib/auth';
 import { useCity } from '@/lib/city';
 import { supabase } from '@/lib/supabase';
@@ -43,12 +45,11 @@ export default function Profile() {
         {mine.map((v) => (
           <Row key={v.id} icon={Store} label={`Moje mesto: ${v.name}`} href={{ pathname: '/venue/[id]', params: { id: v.id } }} />
         ))}
-        <Row icon={Mail} label={`Piši nam: ${APP_EMAIL}`} onPress={() => Linking.openURL(`mailto:${APP_EMAIL}`)} />
-        <Row
-          icon={AtSign}
-          label={`Instagram: @${APP_INSTAGRAM}`}
-          onPress={() => Linking.openURL(`https://instagram.com/${APP_INSTAGRAM}`)}
-        />
+      </View>
+      <View style={[styles.card, { backgroundColor: colors.backgroundElement }]}>
+        <Row icon={Mail} label={APP_EMAIL} onPress={() => Linking.openURL(`mailto:${APP_EMAIL}`)} />
+        <Row icon={InstagramIcon} label={`@${APP_INSTAGRAM}`} onPress={() => Linking.openURL(APP_INSTAGRAM_URL)} />
+        <Row icon={FacebookIcon} label="VibeIN na Facebooku" onPress={() => Linking.openURL(APP_FACEBOOK_URL)} />
       </View>
       <Pressable onPress={() => supabase.auth.signOut()} style={[styles.card, styles.row, { backgroundColor: colors.backgroundElement }]}>
         <LogOut size={20} color={colors.danger} />
@@ -58,7 +59,7 @@ export default function Profile() {
   );
 }
 
-function Row({ icon: Icon, label, href, onPress }: { icon: LucideIcon; label: string; href?: Href; onPress?: () => void }) {
+function Row({ icon: Icon, label, href, onPress }: { icon: IconComponent; label: string; href?: Href; onPress?: () => void }) {
   const colors = useColors();
   return (
     <Pressable onPress={onPress ?? (() => router.push(href!))} style={styles.row}>
