@@ -43,7 +43,7 @@ function Clip({ path, playing }: { path: string; playing: boolean }) {
     if (playing) player.play();
     else player.pause();
   }, [player, playing]);
-  return <VideoView player={player} style={styles.video} contentFit="cover" nativeControls={false} />;
+  return <VideoView player={player} style={styles.video} contentFit="cover" nativeControls={false} playsInline />;
 }
 
 function Glow({ type }: { type: VenueType }) {
