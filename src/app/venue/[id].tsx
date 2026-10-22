@@ -1,6 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, router, useFocusEffect, useLocalSearchParams } from 'expo-router';
-import { AtSign, BadgeCheck, Flame, Globe, Grid3x3, Heart, Navigation, Pencil, Phone, Pin, Plus, Share2, Star, Trash2, type LucideIcon } from 'lucide-react-native';
+import { AtSign, BadgeCheck, Flag, Flame, Globe, Grid3x3, Heart, Navigation, Pencil, Phone, Pin, Plus, Share2, Star, Trash2, type LucideIcon } from 'lucide-react-native';
 import { useCallback, useState } from 'react';
 import { Alert, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
@@ -213,20 +213,24 @@ export default function VenueScreen() {
         )}
       </View>
 
-      {!venue.owner_id &&
-        (claimPending ? (
-          <Pressable onPress={() => router.push({ pathname: '/claim/[id]', params: { id: venue.id } })}>
-            <Text style={[muted, styles.center, styles.link]}>Tvoj zahtev da upravljaš ovim mestom čeka odobrenje. Pogledaj kod</Text>
-          </Pressable>
-        ) : (
-          <Pressable onPress={() => router.push(session ? { pathname: '/claim/[id]', params: { id: venue.id } } : '/login')}>
-            <Text style={[muted, styles.center, styles.link]}>Vlasnik si ovog mesta? Preuzmi profil besplatno</Text>
-          </Pressable>
-        ))}
-
-      <Pressable onPress={() => router.push(session ? { pathname: '/issue/[id]', params: { id: venue.id } } : '/login')}>
-        <Text style={[muted, styles.center, styles.link]}>Mesto je zatvoreno ili ima novo ime? Javi nam</Text>
-      </Pressable>
+      <View style={styles.footerButtons}>
+        {!venue.owner_id && (
+          <View style={styles.row}>
+            <Action
+              icon={BadgeCheck}
+              label={claimPending ? 'Zahtev za profil čeka odobrenje' : 'Vlasnik si? Preuzmi profil besplatno'}
+              onPress={() => router.push(session ? { pathname: '/claim/[id]', params: { id: venue.id } } : '/login')}
+            />
+          </View>
+        )}
+        <View style={styles.row}>
+          <Action
+            icon={Flag}
+            label="Zatvoreno ili novo ime? Javi nam"
+            onPress={() => router.push(session ? { pathname: '/issue/[id]', params: { id: venue.id } } : '/login')}
+          />
+        </View>
+      </View>
     </ScrollView>
   );
 }
@@ -361,4 +365,5 @@ const styles = StyleSheet.create({
   tileStar: { position: 'absolute', top: 6, left: 6 },
   cardTitle: { fontFamily: Fonts.bodyBold, fontSize: 16 },
   link: { textDecorationLine: 'underline' },
+  footerButtons: { gap: Spacing.two },
 });

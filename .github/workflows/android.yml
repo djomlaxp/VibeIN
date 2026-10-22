@@ -12,8 +12,9 @@ on:
 permissions:
   contents: write
 
+# One build per branch: a pull request's build must not cancel the build of main.
 concurrency:
-  group: android
+  group: android-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -37,7 +38,9 @@ jobs:
       - run: ./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a --no-daemon
         working-directory: android
       - run: cp android/app/build/outputs/apk/release/app-release.apk vibein.apk
+      # Only main goes to the download link; pull requests just check that it builds.
       - name: Publish to the "android" release
+        if: github.event_name != 'pull_request'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
