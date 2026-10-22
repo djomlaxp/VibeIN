@@ -2,11 +2,14 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Tabs } from 'expo-router/js-tabs';
 import { Heart, House, Map, Plus, UserRound } from 'lucide-react-native';
 import { Pressable, StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Colors, Fonts, LiveGradient } from '@/constants/theme';
 
 // Bottom bar like the mockup: home, map, a big "+" to report, favorites, profile
 export default function TabsLayout() {
+  // Lifts the bar above Android's navigation keys and the iPhone home bar.
+  const { bottom } = useSafeAreaInsets();
   return (
     <Tabs
       screenOptions={{
@@ -16,7 +19,13 @@ export default function TabsLayout() {
         tabBarShowLabel: false,
         tabBarActiveTintColor: Colors.accent,
         tabBarInactiveTintColor: Colors.text,
-        tabBarStyle: { backgroundColor: Colors.background, borderTopColor: Colors.backgroundElement, height: 64, paddingTop: 8 },
+        tabBarStyle: {
+          backgroundColor: Colors.background,
+          borderTopColor: Colors.backgroundElement,
+          height: 64 + bottom,
+          paddingTop: 8,
+          paddingBottom: bottom,
+        },
         sceneStyle: { backgroundColor: Colors.background },
       }}>
       <Tabs.Screen name="index" options={{ title: 'VibeIN', tabBarIcon: ({ color }) => <House size={26} color={color} /> }} />
