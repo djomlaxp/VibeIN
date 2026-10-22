@@ -33,8 +33,8 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="new"
         options={{
-          title: 'Prijavi atmosferu',
-          tabBarAccessibilityLabel: 'Prijavi atmosferu',
+          title: 'Objavi atmosferu',
+          tabBarAccessibilityLabel: 'Objavi atmosferu',
           tabBarButton: ({ onPress, accessibilityLabel }) => (
             <Pressable onPress={onPress} aria-label={accessibilityLabel} style={styles.plusWrap}>
               <LinearGradient colors={LiveGradient} start={{ x: 0, y: 1 }} end={{ x: 1, y: 0 }} style={styles.plus}>

@@ -104,7 +104,7 @@ export default function VenueScreen() {
         <VenueAvatar type={venue.type} size={88} live={!!now?.report_count} />
         <View style={styles.stats}>
           <Stat value={now?.vibe_score == null ? '–' : Number(now.vibe_score).toFixed(1)} label="vibe sada" color={vibeColor(now?.vibe_score ?? null)} />
-          <Stat value={String(now?.report_count ?? 0)} label="prijava" color={colors.text} />
+          <Stat value={String(now?.report_count ?? 0)} label="objava" color={colors.text} />
           <Stat value={String(posts.length)} label={posts.length === 1 ? 'objava' : 'objave'} color={colors.text} />
         </View>
       </View>
@@ -135,7 +135,7 @@ export default function VenueScreen() {
             <Action icon={Pencil} label="Uredi profil" onPress={() => router.push({ pathname: '/edit/[id]', params: { id: venue.id } })} />
           </>
         ) : (
-          <Action icon={Flame} label="Prijavi atmosferu" primary onPress={() => router.push(session ? { pathname: '/report/[id]', params: { id: venue.id } } : '/login')} />
+          <Action icon={Flame} label="Objavi atmosferu" primary onPress={() => router.push(session ? { pathname: '/report/[id]', params: { id: venue.id } } : '/login')} />
         )}
         <Action
           icon={Navigation}
@@ -187,7 +187,7 @@ export default function VenueScreen() {
             const Icon = t === 'recent' ? Grid3x3 : Pin;
             const on = gridTab === t;
             return (
-              <Pressable key={t} onPress={() => setGridTab(t)} aria-label={t === 'recent' ? 'Prijave' : 'Arhiva'} style={[styles.gridTab, on && { borderColor: colors.accent }]}>
+              <Pressable key={t} onPress={() => setGridTab(t)} aria-label={t === 'recent' ? 'Objave' : 'Arhiva'} style={[styles.gridTab, on && { borderColor: colors.accent }]}>
                 <Icon size={22} color={on ? colors.text : colors.textSecondary} />
               </Pressable>
             );
@@ -195,7 +195,7 @@ export default function VenueScreen() {
         </View>
         {tiles.length === 0 ? (
           <Text style={[muted, styles.center, { paddingVertical: Spacing.four }]}>
-            {gridTab === 'recent' ? 'Još niko nije prijavio atmosferu u poslednja 3 sata.' : 'Vlasnik još nije sačuvao nijedan snimak.'}
+            {gridTab === 'recent' ? 'Još niko nije objavio atmosferu u poslednja 3 sata.' : 'Vlasnik još nije sačuvao nijedan snimak.'}
           </Text>
         ) : (
           <View style={styles.grid}>

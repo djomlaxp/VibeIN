@@ -69,7 +69,7 @@ function RootStack() {
           options={{ headerShown: false, presentation: 'fullScreenModal', animation: 'fade', contentStyle: noInset }}
         />
         <Stack.Screen name="venue/[id]" options={{ title: '' }} />
-        <Stack.Screen name="report/[id]" options={{ title: 'Prijavi atmosferu', presentation: 'modal' }} />
+        <Stack.Screen name="report/[id]" options={{ title: 'Objavi atmosferu', presentation: 'modal' }} />
         <Stack.Screen name="claim/[id]" options={{ title: 'Preuzmi profil mesta', presentation: 'modal' }} />
         <Stack.Screen name="issue/[id]" options={{ title: 'Javi promenu', presentation: 'modal' }} />
         <Stack.Screen name="edit/[id]" options={{ title: 'Uredi profil mesta' }} />

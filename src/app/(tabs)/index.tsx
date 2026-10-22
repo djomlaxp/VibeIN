@@ -161,7 +161,7 @@ export default function Home() {
               </View>
               <Pressable onPress={() => openVenue(v.id)} style={styles.captions}>
                 <Text style={[styles.caption, { color: colors.text }]}>
-                  <Text style={styles.bold}>{now.report_count} prijava</Text> u poslednjih 90 min
+                  <Text style={styles.bold}>{now.report_count} objava</Text> u poslednjih 90 min
                 </Text>
                 {post && (
                   <Text style={[styles.caption, { color: colors.text }]} numberOfLines={2}>
@@ -194,7 +194,7 @@ export default function Home() {
                   <Text style={[styles.name, { color: colors.text }]}>{v.name}</Text>
                   <Text style={[styles.meta, { color: colors.textSecondary }]}>
                     {VENUE_TYPE_LABELS[v.type]}
-                    {distance(v) ? ` · ${distance(v)}` : ''} · nema svežih prijava
+                    {distance(v) ? ` · ${distance(v)}` : ''} · nema svežih objava
                   </Text>
                 </View>
                 {favorites.has(v.id) && <Heart size={18} color={colors.accent} fill={colors.accent} />}

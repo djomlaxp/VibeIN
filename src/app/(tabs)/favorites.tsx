@@ -54,7 +54,7 @@ export default function Favorites() {
               <Text style={[styles.name, { color: colors.text }]}>{v.name}</Text>
               <Text style={[styles.meta, { color: colors.textSecondary }]}>
                 {VENUE_TYPE_LABELS[v.type]}
-                {position ? ` · ${formatDistance(distanceMeters(position, v))}` : ''} · {now?.last_report_at ? timeAgo(now.last_report_at) : 'nema svežih prijava'}
+                {position ? ` · ${formatDistance(distanceMeters(position, v))}` : ''} · {now?.last_report_at ? timeAgo(now.last_report_at) : 'nema svežih objava'}
               </Text>
             </View>
             <VibeBadge score={now?.vibe_score ?? null} />
