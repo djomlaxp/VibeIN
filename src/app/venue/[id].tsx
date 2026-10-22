@@ -1,6 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, router, useFocusEffect, useLocalSearchParams } from 'expo-router';
-import { AtSign, BadgeCheck, Flame, Globe, Grid3x3, Heart, Navigation, Pencil, Phone, Pin, Play, Plus, Share2, Star, Trash2, type LucideIcon } from 'lucide-react-native';
+import { AtSign, BadgeCheck, Flame, Globe, Grid3x3, Heart, Navigation, Pencil, Phone, Pin, Plus, Share2, Star, Trash2, type LucideIcon } from 'lucide-react-native';
 import { useCallback, useState } from 'react';
 import { Alert, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
@@ -80,10 +80,6 @@ export default function VenueScreen() {
 
   async function save() {
     if (!(await toggleFavorite(venue!.id))) router.push('/login');
-  }
-
-  function openClip(r: VibeReport) {
-    router.push({ pathname: '/live', params: { venue: venue!.id, clips: '1', report: r.id } });
   }
 
   return (
@@ -200,9 +196,9 @@ export default function VenueScreen() {
         ) : (
           <View style={styles.grid}>
             {tiles.map((r) => (
-              <Pressable key={r.id} style={styles.tile} onPress={() => (r.video_path ? openClip(r) : undefined)}>
-                <VenueMedia type={venue.type} videoPath={r.video_path} playing={false} style={StyleSheet.absoluteFill}>
-                  {r.video_path && <Play size={16} color="#fff" fill="#fff" style={styles.tilePlay} />}
+              <View key={r.id} style={styles.tile}>
+                {/* Clips play on their own in a silent loop, like the feed */}
+                <VenueMedia type={venue.type} videoPath={r.video_path} style={StyleSheet.absoluteFill}>
                   {!r.video_path && <TileReport report={r} />}
                   <Text style={styles.tileTime}>{timeAgo(r.created_at)}</Text>
                   {isOwner && r.video_path && !r.archive_withdrawn && (
@@ -211,7 +207,7 @@ export default function VenueScreen() {
                     </Pressable>
                   )}
                 </VenueMedia>
-              </Pressable>
+              </View>
             ))}
           </View>
         )}
@@ -361,7 +357,6 @@ const styles = StyleSheet.create({
   tile: { width: '32.9%', aspectRatio: 3 / 4 },
   tileReport: { alignItems: 'center', justifyContent: 'center', gap: 6 },
   tileLabel: { fontFamily: Fonts.bodyBold, fontSize: 13 },
-  tilePlay: { position: 'absolute', top: 8, right: 8 },
   tileTime: { position: 'absolute', left: 8, bottom: 6, color: '#fff', fontFamily: Fonts.bodyBold, fontSize: 12 },
   tileStar: { position: 'absolute', top: 6, left: 6 },
   cardTitle: { fontFamily: Fonts.bodyBold, fontSize: 16 },
