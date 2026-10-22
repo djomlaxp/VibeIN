@@ -159,14 +159,16 @@ export default function Home() {
                   <MapPin size={26} color={colors.text} />
                 </Pressable>
               </View>
-              <Text style={[styles.caption, { color: colors.text }]}>
-                <Text style={styles.bold}>{now.report_count} prijava</Text> u poslednjih 90 min
-              </Text>
-              {post && (
-                <Text style={[styles.caption, { color: colors.text }]} numberOfLines={2}>
-                  <Text style={styles.bold}>{v.name}</Text> {post.title}
+              <Pressable onPress={() => openVenue(v.id)} style={styles.captions}>
+                <Text style={[styles.caption, { color: colors.text }]}>
+                  <Text style={styles.bold}>{now.report_count} prijava</Text> u poslednjih 90 min
                 </Text>
-              )}
+                {post && (
+                  <Text style={[styles.caption, { color: colors.text }]} numberOfLines={2}>
+                    <Text style={styles.bold}>{v.name}</Text> {post.title}
+                  </Text>
+                )}
+              </Pressable>
             </View>
           );
         }}
@@ -224,6 +226,7 @@ const styles = StyleSheet.create({
   mediaBottom: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two },
   actions: { flexDirection: 'row', gap: Spacing.four, paddingVertical: Spacing.one },
   caption: { fontFamily: Fonts.body, fontSize: 14, lineHeight: 20 },
+  captions: { gap: Spacing.two },
   bold: { fontFamily: Fonts.bodyBold },
   section: { fontFamily: Fonts.displayBold, fontSize: 18, marginTop: Spacing.two },
   chip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999 },

@@ -43,7 +43,12 @@ function Clip({ path, playing }: { path: string; playing: boolean }) {
     if (playing) player.play();
     else player.pause();
   }, [player, playing]);
-  return <VideoView player={player} style={styles.video} contentFit="cover" nativeControls={false} playsInline />;
+  // On phones the native video view swallows taps; let them reach the card around it.
+  return (
+    <View style={styles.video} pointerEvents="none">
+      <VideoView player={player} style={styles.video} contentFit="cover" nativeControls={false} playsInline />
+    </View>
+  );
 }
 
 function Glow({ type }: { type: VenueType }) {
