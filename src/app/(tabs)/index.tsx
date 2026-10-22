@@ -1,6 +1,7 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { Link, router, useFocusEffect } from 'expo-router';
 import { Tabs } from 'expo-router/js-tabs';
-import { Bell, Heart, MapPin, ShieldCheck, Users, Video } from 'lucide-react-native';
+import { BarChart3, Bell, BriefcaseBusiness, ChevronRight, Heart, MapPin, ShieldCheck, Users, Video } from 'lucide-react-native';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FlatList, Linking, Platform, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 
@@ -10,7 +11,7 @@ import { Pill } from '@/components/pill';
 import { VENUE_ICONS, VenueAvatar } from '@/components/venue-avatar';
 import { VenueMedia } from '@/components/venue-media';
 import { VibeBadge } from '@/components/vibe-badge';
-import { Fonts, Spacing, useColors } from '@/constants/theme';
+import { Fonts, OwnerColors, OwnerGradient, Spacing, useColors } from '@/constants/theme';
 import { useAuth } from '@/lib/auth';
 import { useCity } from '@/lib/city';
 import { latestClip, latestGenre, latestPost } from '@/lib/feed';
@@ -54,6 +55,9 @@ export default function Home() {
     [venues, vibes, filter, position],
   );
 
+  // While owners use VibeIN Biznis for free, invite everyone who has no venue yet
+  const ownsVenue = venues.some((v) => v.owner_id && v.owner_id === session?.user.id);
+
   const distance = (v: Venue) => (position ? formatDistance(distanceMeters(position, v)) : null);
 
   async function save(id: string) {
@@ -73,6 +77,9 @@ export default function Home() {
                   <ShieldCheck size={24} color={colors.accentWarm} />
                 </Link>
               )}
+              <Link href="/owner" aria-label="VibeIN Biznis">
+                <BriefcaseBusiness size={24} color={OwnerColors.accent} />
+              </Link>
               <Link href={session ? '/notifications' : '/login'} aria-label="Obaveštenja">
                 <View>
                   <Bell size={24} color={colors.text} />
@@ -93,6 +100,7 @@ export default function Home() {
         contentContainerStyle={styles.list}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={reload} />}
         ListHeaderComponent={
+          <>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={[styles.stories, { borderColor: colors.backgroundElement }]} contentContainerStyle={styles.storiesRow}>
             {live.length === 0 && (
               <Text style={[styles.storiesEmpty, { color: colors.textSecondary }]}>Još niko nije javio atmosferu večeras. Budi prvi!</Text>
@@ -112,6 +120,19 @@ export default function Home() {
               );
             })}
           </ScrollView>
+          {!ownsVenue && (
+            <Pressable onPress={() => router.push('/owner')} style={styles.business}>
+              <LinearGradient colors={OwnerGradient} start={{ x: 0, y: 1 }} end={{ x: 1, y: 0 }} style={styles.businessIcon}>
+                <BarChart3 size={22} color={OwnerColors.onAccent} />
+              </LinearGradient>
+              <View style={{ flex: 1, gap: 2 }}>
+                <Text style={styles.businessTitle}>Imaš lokal? Uđi u VibeIN Biznis</Text>
+                <Text style={styles.businessText}>Statistika, akcije i snimci gostiju. Besplatno u probnom periodu.</Text>
+              </View>
+              <ChevronRight size={20} color={OwnerColors.accent} />
+            </Pressable>
+          )}
+          </>
         }
         renderItem={({ item: v }) => {
           const now = vibes[v.id];
@@ -212,6 +233,10 @@ const styles = StyleSheet.create({
   dot: { position: 'absolute', top: -6, right: -8, minWidth: 18, height: 18, borderRadius: 9, borderWidth: 2, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 3 },
   dotText: { fontSize: 10, fontFamily: Fonts.bodyBold },
   list: { paddingBottom: Spacing.four, paddingHorizontal: Spacing.three, gap: Spacing.four, maxWidth: 600, width: '100%', alignSelf: 'center' },
+  business: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three, padding: Spacing.three, marginTop: Spacing.three, borderRadius: 16, borderWidth: 1, borderColor: OwnerColors.backgroundSelected, backgroundColor: OwnerColors.background },
+  businessIcon: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
+  businessTitle: { color: OwnerColors.text, fontFamily: Fonts.bodyBold, fontSize: 15 },
+  businessText: { color: OwnerColors.textSecondary, fontFamily: Fonts.body, fontSize: 13 },
   stories: { flexGrow: 0, borderBottomWidth: 1, marginHorizontal: -Spacing.three },
   storiesRow: { gap: Spacing.three, paddingHorizontal: Spacing.three, paddingTop: Spacing.two, paddingBottom: Spacing.three },
   storiesEmpty: { fontFamily: Fonts.body, fontSize: 14, paddingVertical: Spacing.three },
