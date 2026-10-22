@@ -46,7 +46,7 @@ function Clip({ path, playing }: { path: string; playing: boolean }) {
   // On phones the native video view swallows taps; let them reach the card around it.
   return (
     <View style={styles.video} pointerEvents="none">
-      <VideoView player={player} style={styles.video} contentFit="cover" nativeControls={false} playsInline />
+      <VideoView player={player} style={styles.video} contentFit="cover" nativeControls={false} playsInline surfaceType="textureView" />
     </View>
   );
 }

@@ -287,7 +287,7 @@ function ExampleClip({ example: e, width, height, active, big }: { example: Exam
   return (
     <View style={[styles.tile, { width, height }]}>
       {e.poster && <Image source={e.poster} style={StyleSheet.absoluteFill} contentFit="cover" />}
-      <VideoView player={player} style={styles.video} contentFit="cover" nativeControls={false} playsInline />
+      <VideoView player={player} style={styles.video} contentFit="cover" nativeControls={false} playsInline surfaceType="textureView" />
       <LinearGradient colors={['transparent', 'rgba(12,18,16,0.9)']} style={styles.tileShade} />
       {big && (
         <View style={styles.tileLive}>

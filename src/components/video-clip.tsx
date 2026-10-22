@@ -8,7 +8,7 @@ export function VideoClip({ path }: { path: string }) {
     p.loop = true;
     p.muted = true;
   });
-  return <VideoView player={player} style={styles.video} contentFit="cover" nativeControls playsInline />;
+  return <VideoView player={player} style={styles.video} contentFit="cover" nativeControls playsInline surfaceType="textureView" />;
 }
 
 const styles = StyleSheet.create({
