@@ -38,9 +38,9 @@ export function vibeColor(score: number | null) {
 
 // Errors raised by the database functions, shown to the user in Serbian
 const ERROR_MESSAGES: Record<string, string> = {
-  not_authenticated: 'Prijavi se da bi poslao prijavu atmosfere.',
+  not_authenticated: 'Prijavi se da bi objavio atmosferu.',
   too_far_from_venue: `Moraš biti na manje od ${MAX_REPORT_DISTANCE_M} m od objekta.`,
-  rate_limited: `Možeš poslati jednu prijavu za ovaj objekat na ${REPORT_COOLDOWN_MIN} minuta.`,
+  rate_limited: `Možeš poslati jednu objavu za ovaj objekat na ${REPORT_COOLDOWN_MIN} minuta.`,
   owner_cannot_report: 'Vlasnik ne može da ocenjuje atmosferu u svom objektu.',
   invalid_video_path: 'Snimak nije ispravan, pokušaj ponovo.',
   not_venue_owner: 'Samo vlasnik objekta može arhivirati snimke.',

@@ -85,10 +85,10 @@ export function AdminStats() {
 
       <View style={styles.grid}>
         <Tile title="Korisnici" value={s.users.total} lines={[`+${s.users.today} danas`, `+${s.users.week} ove nedelje`]} />
-        <Tile title="Prijave atmosfere" value={s.reports.total} lines={[`+${s.reports.today} danas`, `+${s.reports.week} ove nedelje`]} />
-        <Tile title="Prijave sa snimkom" value={s.reports.with_video} lines={[`+${s.reports.with_video_week} ove nedelje`]} />
-        <Tile title="Mesta uživo sada" value={s.live_now} lines={['prijava u poslednjih 90 min']} accent />
-        <Tile title="Mesta u aplikaciji" value={s.venues} lines={[`${s.never_reported_count} bez ijedne prijave`]} />
+        <Tile title="Objave atmosfere" value={s.reports.total} lines={[`+${s.reports.today} danas`, `+${s.reports.week} ove nedelje`]} />
+        <Tile title="Objave sa snimkom" value={s.reports.with_video} lines={[`+${s.reports.with_video_week} ove nedelje`]} />
+        <Tile title="Mesta uživo sada" value={s.live_now} lines={['objava u poslednjih 90 min']} accent />
+        <Tile title="Mesta u aplikaciji" value={s.venues} lines={[`${s.never_reported_count} bez ijedne objave`]} />
         <Tile title="Vlasnici mesta" value={s.owners} lines={[`${s.posts.total} objava i promocija`, `+${s.posts.week} ove nedelje`]} />
         <Tile title="Sačuvano u omiljena" value={s.favorites} />
       </View>
@@ -100,11 +100,11 @@ export function AdminStats() {
         />
       </Section>
 
-      <Section title="Kad se najviše izlazi: prijave po danu">
+      <Section title="Kad se najviše izlazi: objave po danu">
         <Bars values={s.reports_by_weekday} labels={WEEKDAYS} />
       </Section>
 
-      <Section title="Prijave po satu">
+      <Section title="Objave po satu">
         <Bars values={s.reports_by_hour} labels={s.reports_by_hour.map((_, h) => (h % 3 === 0 ? `${h}h` : ''))} />
       </Section>
 
@@ -128,11 +128,11 @@ export function AdminStats() {
         })}
       </Section>
 
-      <Ranking title="Najviše prijava" rows={s.most_reported} value={(r) => `${r.count}`} />
-      <Ranking title="Najbolja ocena (bar 3 prijave)" rows={s.best_rated} value={(r) => `${Number(r.score).toFixed(1)} · ${r.count}×`} />
+      <Ranking title="Najviše objava" rows={s.most_reported} value={(r) => `${r.count}`} />
+      <Ranking title="Najbolja ocena (bar 3 objave)" rows={s.best_rated} value={(r) => `${Number(r.score).toFixed(1)} · ${r.count}×`} />
       <Ranking title="Najviše puta sačuvana u omiljena" rows={s.most_saved} value={(r) => `${r.count}`} />
-      <Ranking title="Najaktivniji korisnici" rows={s.top_reporters} value={(r) => `${r.count} prijava`} />
-      <Ranking title={`Mesta bez ijedne prijave (${s.never_reported_count})`} rows={s.never_reported} hint="Dobri kandidati za reklamu." />
+      <Ranking title="Najaktivniji korisnici" rows={s.top_reporters} value={(r) => `${r.count} objava`} />
+      <Ranking title={`Mesta bez ijedne objave (${s.never_reported_count})`} rows={s.never_reported} hint="Dobri kandidati za reklamu." />
     </View>
   );
 }
