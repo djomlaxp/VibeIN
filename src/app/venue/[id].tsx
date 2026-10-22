@@ -1,6 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, router, useFocusEffect, useLocalSearchParams } from 'expo-router';
-import { AtSign, BadgeCheck, Flag, Flame, Globe, Grid3x3, Heart, Navigation, Pencil, Phone, Pin, Plus, Share2, Star, Trash2, type LucideIcon } from 'lucide-react-native';
+import { AtSign, BadgeCheck, BarChart3, ChevronRight, Flag, Flame, Globe, Grid3x3, Heart, Navigation, Pencil, Phone, Pin, Plus, Share2, Star, Trash2, type LucideIcon } from 'lucide-react-native';
 import { useCallback, useState } from 'react';
 import { Alert, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
@@ -8,7 +8,7 @@ import { VIBE_ICONS, genreIcon, type IconComponent } from '@/components/icons';
 import { ShareSheet } from '@/components/share-sheet';
 import { POST_ICONS, VenueAvatar } from '@/components/venue-avatar';
 import { VenueMedia } from '@/components/venue-media';
-import { Fonts, LiveGradient, Spacing, useColors } from '@/constants/theme';
+import { Fonts, LiveGradient, OwnerColors, Spacing, useColors } from '@/constants/theme';
 import { useAuth } from '@/lib/auth';
 import { REPORT_COLUMNS, useCity } from '@/lib/city';
 import { supabase } from '@/lib/supabase';
@@ -143,6 +143,14 @@ export default function VenueScreen() {
           <Heart size={20} color={saved ? colors.accent : colors.text} fill={saved ? colors.accent : 'transparent'} />
         </Pressable>
       </View>
+
+      {isOwner && (
+        <Pressable onPress={() => router.push({ pathname: '/owner', params: { venue: venue.id } })} style={styles.business}>
+          <BarChart3 size={20} color={OwnerColors.accent} />
+          <Text style={styles.businessText}>VibeIN Biznis: statistika i snimci gostiju</Text>
+          <ChevronRight size={20} color={OwnerColors.textSecondary} />
+        </Pressable>
+      )}
 
       {!!(venue.contact?.phone || venue.contact?.instagram || venue.contact?.website) && (
         <View style={[styles.card, { backgroundColor: colors.backgroundElement }]}>
@@ -341,6 +349,8 @@ const styles = StyleSheet.create({
   chip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999 },
   chipText: { fontFamily: Fonts.bodyBold, fontSize: 13 },
   row: { flexDirection: 'row', gap: Spacing.two },
+  business: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three, padding: Spacing.three, borderRadius: 16, backgroundColor: OwnerColors.background, borderWidth: 1, borderColor: OwnerColors.backgroundSelected },
+  businessText: { flex: 1, fontFamily: Fonts.bodyBold, fontSize: 15, color: OwnerColors.text },
   actionWrap: { borderRadius: 12, overflow: 'hidden' },
   action: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.two, paddingVertical: 12, borderRadius: 12 },
   actionText: { fontFamily: Fonts.bodyBold, fontSize: 15 },

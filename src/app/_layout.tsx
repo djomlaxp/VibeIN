@@ -75,6 +75,7 @@ function RootStack() {
         <Stack.Screen name="edit/[id]" options={{ title: 'Uredi profil mesta' }} />
         <Stack.Screen name="post/[id]" options={{ title: 'Nova objava', presentation: 'modal' }} />
         <Stack.Screen name="admin" options={{ title: 'Admin panel' }} />
+        <Stack.Screen name="owner" options={{ title: 'VibeIN Biznis' }} />
         <Stack.Screen name="notifications" options={{ title: 'Obaveštenja' }} />
       </Stack.Protected>
       <Stack.Protected guard={!session} redirectTo="/">
