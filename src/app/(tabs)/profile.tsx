@@ -1,8 +1,8 @@
 import { router, type Href } from 'expo-router';
-import { Bell, ChevronRight, LogOut, Mail, ShieldCheck, Store, UserRound } from 'lucide-react-native';
+import { BarChart3, Bell, ChevronRight, LogOut, Mail, ShieldCheck, UserRound } from 'lucide-react-native';
 import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { Fonts, Spacing, useColors } from '@/constants/theme';
+import { Fonts, OwnerColors, Spacing, useColors } from '@/constants/theme';
 import type { IconComponent } from '@/components/icons';
 import { FacebookIcon, InstagramIcon } from '@/components/social-icons';
 import { APP_EMAIL, APP_FACEBOOK_URL, APP_INSTAGRAM, APP_INSTAGRAM_URL } from '@/lib/app-info';
@@ -42,10 +42,15 @@ export default function Profile() {
       <View style={[styles.card, { backgroundColor: colors.backgroundElement }]}>
         <Row icon={Bell} label="Obaveštenja" href="/notifications" />
         {role === 'admin' && <Row icon={ShieldCheck} label="Admin" href="/admin" />}
-        {mine.map((v) => (
-          <Row key={v.id} icon={Store} label={`Moje mesto: ${v.name}`} href={{ pathname: '/venue/[id]', params: { id: v.id } }} />
-        ))}
       </View>
+      <Pressable onPress={() => router.push('/owner')} style={[styles.card, styles.row, styles.business]}>
+        <BarChart3 size={20} color={OwnerColors.accent} />
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.rowText, { color: OwnerColors.text }]}>VibeIN Biznis</Text>
+          <Text style={styles.businessSub}>{mine.length ? `Tvoje mesto: ${mine.map((v) => v.name).join(', ')}` : 'Imaš lokal? Preuzmi profil besplatno'}</Text>
+        </View>
+        <ChevronRight size={20} color={OwnerColors.textSecondary} />
+      </Pressable>
       <View style={[styles.card, { backgroundColor: colors.backgroundElement }]}>
         <Row icon={Mail} label={APP_EMAIL} onPress={() => Linking.openURL(`mailto:${APP_EMAIL}`)} />
         <Row icon={InstagramIcon} label={`@${APP_INSTAGRAM}`} onPress={() => Linking.openURL(APP_INSTAGRAM_URL)} />
@@ -77,6 +82,8 @@ const styles = StyleSheet.create({
   email: { fontFamily: Fonts.bodyBold, fontSize: 16 },
   card: { borderRadius: 16, paddingHorizontal: Spacing.three },
   row: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three, paddingVertical: 14 },
+  business: { backgroundColor: OwnerColors.background, borderWidth: 1, borderColor: OwnerColors.accent },
+  businessSub: { fontFamily: Fonts.body, fontSize: 13, color: OwnerColors.textSecondary },
   rowText: { flex: 1, fontFamily: Fonts.bodyBold, fontSize: 16 },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: Spacing.three, padding: Spacing.four },
   emptyText: { fontFamily: Fonts.body, fontSize: 16, textAlign: 'center' },

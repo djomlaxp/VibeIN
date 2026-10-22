@@ -18,6 +18,22 @@ export const Colors = {
 // Ring around venues that are live right now (lime -> mint -> cyan)
 export const LiveGradient = ['#C6FF3D', '#5CF2B0', '#2FD3E0'] as const;
 
+// VibeIN Biznis, the venue owners' part: same layout and fonts, its own
+// palette (violet night with a gold accent) so owners always know where they are.
+export const OwnerColors = {
+  text: '#F3EFFA',
+  textSecondary: '#A99FBF',
+  background: '#110D1A',
+  backgroundElement: '#1C1729',
+  backgroundSelected: '#2A2340',
+  accent: '#FFC94D',
+  accentSoft: '#B79CFF',
+  onAccent: '#110D1A',
+  danger: '#FF6B6B',
+} as const;
+
+export const OwnerGradient = ['#FFC94D', '#FF9A5A', '#FF5C8A'] as const;
+
 export function useColors() {
   return Colors;
 }
