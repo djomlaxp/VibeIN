@@ -44,7 +44,8 @@ export default function AdminScreen() {
 
   async function run(rpc: 'review_venue_claim' | 'review_venue_issue', args: Record<string, unknown>) {
     const { error } = await supabase.rpc(rpc, args);
-    setError(error ? errorMessage(error) : null);
+    // Admins also see the database's own words, so a screenshot says what broke
+    setError(error ? `${errorMessage(error)} (${error.message})` : null);
     load();
   }
 
