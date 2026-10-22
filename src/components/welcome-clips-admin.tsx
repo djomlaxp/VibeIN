@@ -15,12 +15,16 @@ const SLOTS = [
   { slot: 3, place: 'Mali snimak, dole desno', label: 'Koncert' },
 ];
 
+// What the 'welcome' storage bucket accepts
+const MAX_CLIP_BYTES = 50 * 1024 * 1024;
+const CLIP_TYPES = ['video/mp4', 'video/quicktime', 'video/webm'];
+
 // Opens the browser's file chooser for one video.
 function pickVideo(): Promise<File | null> {
   return new Promise((resolve) => {
     const input = document.createElement('input');
     input.type = 'file';
-    input.accept = 'video/mp4,video/quicktime,video/webm';
+    input.accept = CLIP_TYPES.join(',');
     input.onchange = () => resolve(input.files?.[0] ?? null);
     input.click();
   });
@@ -46,20 +50,31 @@ export function WelcomeClipsAdmin() {
   async function upload(slot: number, fallbackLabel: string) {
     const file = await pickVideo();
     if (!file) return;
-    setBusy(slot);
     setError(null);
+    // The bucket refuses these anyway; say why in plain words before uploading
+    if (file.size > MAX_CLIP_BYTES) {
+      return setError(
+        `Snimak ima ${Math.round(file.size / 1024 / 1024)} MB, a najviše može 50 MB. Skrati ga ili smanji kvalitet pa probaj ponovo.`,
+      );
+    }
+    if (file.type && !CLIP_TYPES.includes(file.type)) {
+      return setError('Ovaj format snimka nije podržan. Treba MP4, MOV ili WebM.');
+    }
+    setBusy(slot);
     const ext = file.name.split('.').pop()?.toLowerCase() || 'mp4';
     const path = `slot-${slot}-${Date.now()}.${ext}`;
-    const { error: uploadError } = await supabase.storage.from(WELCOME_BUCKET).upload(path, file, { contentType: file.type || 'video/mp4' });
+    const { error: uploadError } = await supabase.storage
+      .from(WELCOME_BUCKET)
+      .upload(path, file, { contentType: file.type || 'video/mp4' });
     if (uploadError) {
       setBusy(null);
-      return setError(errorMessage(uploadError));
+      return setError(`${errorMessage(uploadError)} (${uploadError.message})`);
     }
     const old = clips.find((c) => c.slot === slot);
     const { error: saveError } = await supabase
       .from('welcome_clips')
       .upsert({ slot, video_path: path, label: labels[slot]?.trim() || fallbackLabel, updated_at: new Date().toISOString() });
-    if (saveError) setError(errorMessage(saveError));
+    if (saveError) setError(`${errorMessage(saveError)} (${saveError.message})`);
     else if (old) await supabase.storage.from(WELCOME_BUCKET).remove([old.video_path]);
     setBusy(null);
     load();
@@ -76,7 +91,10 @@ export function WelcomeClipsAdmin() {
 
   async function saveLabel(slot: number) {
     if (!clips.some((c) => c.slot === slot)) return;
-    const { error: saveError } = await supabase.from('welcome_clips').update({ label: labels[slot]?.trim() ?? '' }).eq('slot', slot);
+    const { error: saveError } = await supabase
+      .from('welcome_clips')
+      .update({ label: labels[slot]?.trim() ?? '' })
+      .eq('slot', slot);
     if (saveError) setError(errorMessage(saveError));
   }
 
